@@ -15,3 +15,4 @@ Collate:
     'utils.R'
     'CLI.R'
     'parser.R'
+    'rd.R'

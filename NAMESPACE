@@ -1,3 +1,7 @@
 export(packageCLI)
 export(CLIArgumentParser)
 export(parseCMD)
+export(rd_list.tags)
+importFrom(tools,Rd_db)
+importFrom(tools,Rd2txt)
+importFrom(tools,parse_Rd)

@@ -5,6 +5,10 @@
 ###############################################################################
 
 
+sstr <- function(x, collapse = "\n"){
+    paste0(capture.output(str(x)), collapse = collapse)
+}
+
 .silenceF <- function(f, verbose=FALSE){
     
     if( verbose ) f
@@ -41,3 +45,31 @@ logMessage <- function(..., appendLF = TRUE, extfile = NULL){
     message(..., appendLF = appendLF)
     
 }
+
+resMessage <- function(..., item = '', appendLF = TRUE){
+    smessage(..., item = item, appendLF = appendLF)
+}
+
+tryCatchWarning <- local({
+    W <- list()
+    w.handler <- function(w){ # warning handler
+            W <<- c(W, list(w))
+            invokeRestart("muffleWarning")
+    }
+    function(expr, ..., format. = FALSE)
+    {
+            if( missing(expr) ){
+                    if( isFALSE(format.) ) return(W)
+                    else{
+                            if( !length(W) ) return(NULL)
+                            w <- str_trim(sapply(W, as.character))
+                            if( is.na(format.) ) return(w)
+                            res <- paste0('## Warnings:\n', paste0("* ", w, collapse = "\n"))
+                                return(res)
+                        }
+                }
+                W <<- list()
+                withCallingHandlers(tryCatch(expr, ...)
+                            , warning = w.handler)
+        }
+})
