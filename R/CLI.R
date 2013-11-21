@@ -77,7 +77,7 @@ makeCLI <- function(default = NULL, package = NULL){
     }
 }
 
-
+#' @importFrom methods is
 is.CLIentry <- function(x) is(x, 'CLIentry')
 as.CLIentry <- function(x){
     if( is.CLIentry(x) ) return(x)

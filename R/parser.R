@@ -171,7 +171,7 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #' @rdname CLIArgumentParser
 parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     
-    if( isString(ARGS) == 1L ){ # used in dev/debugging
+    if( is.character(ARGS) && length(ARGS) == 1L  ){ # used in dev/debugging
         ARGS <- strsplit(ARGS, ' ')[[1]]
     }
     # fix quotes to avoid python JSON parsing error
