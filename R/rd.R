@@ -11,6 +11,7 @@
 
 rd_txt <- function(rd, collapse = NULL){
    res <- capture.output(Rd2txt(rd, fragment=TRUE))
+   res <- res[nzchar(res)]
    if( isTRUE(collapse) ) collapse <- "\n"
    if( !is.null(collapse) ) res <- paste0(res, collapse = collapse)
    res
