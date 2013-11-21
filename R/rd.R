@@ -17,13 +17,15 @@ rd_txt <- function(rd, collapse = NULL){
 }
 
 #' @importFrom tools Rd_db
-rd_package <- function(package){
-    if( isDevNamespace(package) ){
-        Rd_db(dir = packagePath(package = package))
-    }else if( identical(Sys.getenv('R_INSTALL_PKG'), package) ){
+rd_package <- function(package, ...){
+    if( identical(Sys.getenv('R_INSTALL_PKG'), package) ){
         # check if one is installing this very same package
         Rd_db(dir = file.path(getwd(), package))
-    }else Rd_db(package = package)
+    }else if( file_test('-d', package) ){
+        if( !is_source_package(package) )
+            Rd_db(package = basename(package), lib.loc = dirname(package))
+        else Rd_db(dir = package)
+    }else Rd_db(package = package, ...)
 }
 
 rd_list.topics <- function(package, pattern = NULL, ...){

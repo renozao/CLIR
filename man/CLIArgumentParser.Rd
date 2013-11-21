@@ -6,8 +6,7 @@
   CLIArgumentParser(prog = CLIfile(), description = "",
     ..., epilog = "", show.defaults = TRUE)
 
-  parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE,
-    envir = parent.frame())
+  parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE)
 }
 \arguments{
   \item{prog}{program name}
@@ -31,9 +30,6 @@
 
   \item{debug}{logical that indicate if debugging
   information should be printed.}
-
-  \item{envir}{environment that contains where the
-  sub-command functions are looked for.}
 }
 \description{
   Extends the capabilities of package \pkg{argparse}, e.g.,

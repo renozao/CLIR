@@ -2,8 +2,8 @@
 \alias{CLI}
 \title{Package Specific Command Line Interface}
 \usage{
-  CLI(package, altfile = NULL, local = TRUE,
-    ARGS = commandArgs(TRUE), ...)
+  CLI(default = NULL, ARGS = commandArgs(TRUE), ...,
+    package = NULL)
 }
 \arguments{
   \item{package}{package name}
@@ -20,7 +20,7 @@
   \item{ARGS}{list of parsed arguments passed to the main
   CLI function.}
 
-  \item{...}{extra arugments passed to the package's CLI
+  \item{...}{extra arguments passed to the package's CLI
   function.}
 }
 \description{

@@ -4,6 +4,29 @@
 # Created: Nov 20, 2013
 ###############################################################################
 
+is_source_package <- function(path){
+    !file.exists(file.path(path, 'Meta'))
+}
+
+load_package <- function(path){
+    if( is_source_package(path) ){
+        .silenceF(devtools::load_all)(path)
+    }else{
+        lib <- normalizePath(dirname(path))
+        ol <- .libPaths()
+        .libPaths(c(lib, ol))
+        on.exit(.libPaths(ol))
+        qlibrary(basename(path))
+    }
+}
+
+isString <- function(x) is.character(x) && length(x) == 1L 
+        
+packageInfo <- function(file){
+    
+    res <- read.dcf(file)
+    as.list(res[1, ])
+}
 
 sstr <- function(x, collapse = "\n"){
     paste0(capture.output(str(x)), collapse = collapse)
@@ -22,54 +45,7 @@ sstr <- function(x, collapse = "\n"){
 
 qlibrary <- .silenceF(library, verbose = FALSE)
 
-smessage <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
-    if( is.null(item) ){ # choose item from indent
-        .item <- c('*', '*', '-', '-', '>', '>') 
-        item <- .item[indent+1]
-    }
-    indent <- if( indent ) paste0(rep(' ', indent), collapse='') else ''
-    if( nzchar(item) ) item <- paste0(item, ' ')
-    message(indent, item, ..., appendLF = appendLF)
-}
 
 .hasArgument <- function(ARGS){
     function(x) length(ARGS[[x]]) && nzchar(ARGS[[x]])
 }
-
-logMessage <- function(..., appendLF = TRUE, extfile = NULL){
-    
-    # output to external file as well
-    if( !is.null(extfile) ){
-        cat(..., if( appendLF ) "\n", sep ='', file = extfile, append = TRUE)
-    }
-    message(..., appendLF = appendLF)
-    
-}
-
-resMessage <- function(..., item = '', appendLF = TRUE){
-    smessage(..., item = item, appendLF = appendLF)
-}
-
-tryCatchWarning <- local({
-    W <- list()
-    w.handler <- function(w){ # warning handler
-            W <<- c(W, list(w))
-            invokeRestart("muffleWarning")
-    }
-    function(expr, ..., format. = FALSE)
-    {
-            if( missing(expr) ){
-                    if( isFALSE(format.) ) return(W)
-                    else{
-                            if( !length(W) ) return(NULL)
-                            w <- str_trim(sapply(W, as.character))
-                            if( is.na(format.) ) return(w)
-                            res <- paste0('## Warnings:\n', paste0("* ", w, collapse = "\n"))
-                                return(res)
-                        }
-                }
-                W <<- list()
-                withCallingHandlers(tryCatch(expr, ...)
-                            , warning = w.handler)
-        }
-})

@@ -17,6 +17,7 @@
 #' be displayed. 
 #' 
 #' @export
+#' @import argparse
 CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = '', show.defaults = TRUE){
     
     # load argparse
@@ -26,9 +27,14 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
         gsub("\n", "", x)
     }
     
-    .special <- '__@@##@@__'
-    epilog <- paste0(.special, epilog)
-    p <- ArgumentParser(prog = prog, description = .flag_newlines(description), ..., epilog = .flag_newlines(epilog))
+    # define place holders
+    description_ph <- '__@@DESCRIPTION@@__'
+    command_ph <- '__@@COMMANDS@@__'
+    epilog_ph <- '__@@EPILOG@@__'
+    p <- ArgumentParser(prog = prog, description = description_ph, ...
+                        , epilog = paste0(command_ph, epilog_ph))
+    p$description_str <- description
+    p$epilog_str <- epilog
     
     # change argument formatter if required
     if( show.defaults ){
@@ -40,7 +46,9 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     p <- proto(p)
     
     # add add_command function
-    p$command_loc <- .special
+    p$description_loc <- description_ph
+    p$command_loc <- command_ph
+    p$epilog_loc <- epilog_ph
     p$prog <- prog
     p$exec <- if( nchar(exec_path <- CLIfile(full = TRUE)) ) normalizePath(CLIfile(full = TRUE)) else '' 
     p$command <- list()
@@ -51,23 +59,27 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     }
     
     # add a (sub-)command
-    p$add_command <- function(., command, help='', ..., default = FALSE){
+    p$add_command <- function(., command, fun, help='', ..., default = FALSE){
         # add command argument if necessary
         if( !length(.$command) ){
             .$.super$add_argument('command', help = paste0(.$prog, ' command to run'))
         }
         # store command
-        .$command[command] <- help	
+        .$command[[command]] <- list(fun = fun, help = help)	
         # store command as default
         if( default ) .$command_idefault <- length(.$command)
     }
     #
     
+    p$.dummy_arg_help <- '__@@ARGHELP@@__'
+    p$argument_help <- character()
     p$add_argument <- function(., ..., help = ''){
         .flag_newlines <- function(x){
             gsub("\n", "", x)
         }
+        .$argument_help <- c(.$argument_help, help) 
         help <- .flag_newlines(help)
+        help <- .$.dummy_arg_help
         .$.super$add_argument(..., help = help)
     }
     
@@ -85,7 +97,21 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
         
         # get formatted help
         h <- paste(capture.output(.$.super$print_help()), collapse="\n")
-#		# fix new lines if necessary
+        h <- sub(sprintf("\\n?%s", .$description_loc), .$description_str, h)
+        
+        # substitute dummy help by actual formated help  
+        if( length(.$argument_help) ){
+            p <- sprintf("(.*)%s.*", .$.dummy_arg_help)
+            i <- grep(p, hs <- strsplit(h, "\n")[[1]])
+            pad <- max(nchar(a <- gsub(p, "\\1", hs[i])))
+            pad <- sprintf(paste0("\n  %-", pad, "s"), '')
+            sapply(.$argument_help, function(x){
+                s <- x
+                s <- gsub("\\n", pad, s)
+                h <<- sub(.$.dummy_arg_help, s, h, fixed = TRUE)
+            })
+        }
+        # fix new lines if necessary
 #		nl <- strsplit(h, "##NL##")[[1]]
 #		if( length(nl) > 1L ){
 #			indent <- nchar(gsub("^([ ]+).*", "\\1", tail(strsplit(nl[1], "\n")[[1L]], 1L)))
@@ -100,12 +126,15 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
             # format command help
             lm <- max(nchar(names(.$command)))
             fmt <- paste0("  %-", lm, "s")
-            cmds <- strwrap(.$command, indent = 4, exdent = 2 + lm + 4, width = 80, simplify = FALSE)
+            cmds <- lapply(.$command, function(x){
+                        strwrap(x$help, indent = 4, exdent = 2 + lm + 4, width = 80, simplify = FALSE)
+            })
             cmds <- sapply(cmds, paste, collapse = "\n")
             cmds <- paste0(sprintf(fmt, names(.$command)), cmds)
             cmds <- paste0('Commands:\n', paste(cmds, collapse = "\n"))
         }
-        h <- gsub(.$command_loc, cmds, h, fixed = TRUE)
+        h <- sub(.$command_loc, cmds, h, fixed = TRUE)
+        h <- sub(.$epilog_loc, .$epilog_str, h, fixed = TRUE)
         cat(h, sep="\n")
     }
     #
@@ -114,15 +143,9 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     p$call_string <- function(., args = commandArgs(TRUE)){
         paste(.$prog, paste0(args, collapse = ' '))
     }
-    
-    e <- parent.frame()
-    p$locenvir <- parent.env(e)
-    
-    # commmand parer
-    p$parse_cmd <- function(., ...){
-#        print(ls(.$locenvir))
-        pkgmaker::parseCMD(., ..., envir = .$locenvir)
-    }
+        
+    # command parer
+    p$parse_cmd <- RCLI::parseCMD
     
     p
 }
@@ -143,11 +166,10 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #' @param parser parser object as returned by \code{CLIArgumentParser}.
 #' @param ARGS command line argument to parse, as a named list or a character string.
 #' @param debug logical that indicate if debugging information should be printed.
-#' @param envir environment that contains where the sub-command functions are looked for. 
 #' 
 #' @export
 #' @rdname CLIArgumentParser
-parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, envir = parent.frame()){
+parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     
     if( isString(ARGS) == 1L ){ # used in dev/debugging
         ARGS <- strsplit(ARGS, ' ')[[1]]
@@ -155,7 +177,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, envir = pa
     # fix quotes to avoid python JSON parsing error
     ARGS <- gsub("'", "\"", ARGS)
     
-    library(pkgmaker, quietly = TRUE)
+#    library(pkgmaker, quietly = TRUE)
     # define command line arguments
     prog <- parser$prog
     
@@ -170,6 +192,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, envir = pa
             stop("unknown ", prog," command '", command, "'\n"
                     , "  Available commands: ", paste0(names(parser$command), collapse = ', ') 
             #, paste(capture.output(parser$print_usage()), collapse = "\n")
+                , call. = FALSE
             )
         }
     }else if( any(ARGS %in% c('-h', '--help')) ){
@@ -189,13 +212,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, envir = pa
     }
     
     # get command-specific parser
-    command <- ARGS[1L]
-    cmd_funame <- paste0('CLI_', command)
-    if( !exists(cmd_funame, envir, inherits = TRUE) ){
-#    if( is.null(cmd_fun <- getFunction(cmd_funame, mustFind = FALSE)) ){
-        stop("Could not execute ", prog , " command ", command, ": did not find CLI entry point '", cmd_funame, "'")
-    }
-    cmd_fun <- get(cmd_funame, envir, inherits = TRUE)
+    cmd_fun <- parser$command[[command]]$fun
     cmd_parser <- cmd_fun(ARGS=NULL)
     ARGS <- ARGS[-1L]
     
