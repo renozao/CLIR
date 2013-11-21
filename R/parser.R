@@ -97,7 +97,7 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
         
         # get formatted help
         h <- paste(capture.output(.$.super$print_help()), collapse="\n")
-        h <- sub(sprintf("\\n?%s", .$description_loc), .$description_str, h)
+        h <- sub(sprintf("%s", .$description_loc), .$description_str, h)
         
         # substitute dummy help by actual formated help  
         if( length(.$argument_help) ){
