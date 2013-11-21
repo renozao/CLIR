@@ -92,34 +92,41 @@ makeCLIentry <- function(name, main, path){
     .details <- rd_tag2txt(rd, 'details')
     .param <- rd_topic_args2txt(name, rd, format = TRUE, quiet = TRUE)
     .cmd <- gsub("^\\.?CLI_", '', name)
-    fun <- function(ARGS = commandArgs(TRUE)){
-        
-        # CMD ARGUMENTS
-        parser <- CLIArgumentParser(prog = paste(main, .cmd)
-                , description = .desc
-                , epilog = .details)
-        
-        # describe parameters
-        CLI_fun <- rd_tag2txt(rd, 'usage')
-        CLI_fun <- eval(parse(text = sprintf("function%s{}", gsub(name, '', CLI_fun))))   
-	    defaults <- formals(CLI_fun)
-        mapply(function(p, d){
-                # define specs
-                specs <- list(paste0("--", p))
-                # help string
-                if( grepl("^[[]-", d) ){
-                    abv_pattern <- "^[[](-[^]]+)[]] *(.*)"
-                    abv <- gsub(abv_pattern, "\\1", d)
-                    specs <- c(abv, specs)
-                    d <- gsub(abv_pattern, "\\2", d)
+    
+    ## PARSER
+    parser <- CLIArgumentParser(prog = paste(main, .cmd)
+            , description = .desc
+            , epilog = .details)
+    
+    # describe parameters
+    CLI_fun <- rd_tag2txt(rd, 'usage')
+    CLI_fun <- eval(parse(text = sprintf("function%s{}", gsub(name, '', CLI_fun))))   
+	defaults <- formals(CLI_fun)
+    mapply(function(p, d){
+            # define specs
+            specs <- list(paste0("--", p))
+            # extract special arguments from help string
+            if( grepl("^ *[[] *-[^ ]", d) ){
+                abv_pattern <- "^ *[[] *(-[^ ,]+) *,?([^]]*)[]] *(.*)"
+                abv <- gsub(abv_pattern, "\\1", d)
+                specs <- c(abv, specs)
+                # extra arguments
+                if( nchar(extra <- gsub(abv_pattern, "\\2", d)) ){
+                    specs <- c(specs, eval(parse(text = sprintf("c(%s)", extra))))
                 }
-                specs$help <- d
-                if( !is.symbol(def <- defaults[[p]]) ) specs$default <- def
-                else specs$required <- TRUE
-                
-                # push argument into parser stack
-                do.call(parser$add_argument, specs)
+                d <- gsub(abv_pattern, "\\3", d)
+            }
+            specs$help <- d
+            if( !is.symbol(def <- defaults[[p]]) ) specs$default <- def
+            else specs$required <- TRUE
+            
+            # push argument into parser stack
+            do.call(parser$add_argument, specs)
         }, names(.param), .param)
+    #
+    
+    # WRAPPER
+    fun <- function(ARGS = commandArgs(TRUE)){
         
 #        cat(parser$python_code, sep = "\n")
         
@@ -136,7 +143,7 @@ makeCLIentry <- function(name, main, path){
         # load package from path
         load_package(path)
         # call CLI function with arguments
-        do.call(name, ARGS)
+        invisible(do.call(name, ARGS))
     }  
     list(entry = name, command = .cmd, title = .title, fun = fun)
 }
