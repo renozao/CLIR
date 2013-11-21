@@ -77,47 +77,69 @@ makeCLI <- function(default = NULL, package = NULL){
     }
 }
 
-makeCLIentry <- function(name, main, path){
-        
-    rd <- rd_topic(name, path, simplify = FALSE)
-    .title <- rd_tag2txt(rd, 'title') 
-    .title <- gsub("^CLI: *", '', .title[[1]][[1]])
-    .desc <- rd_tag2txt(rd, 'description')
-    .details <- rd_tag2txt(rd, 'details')
-    .param <- rd_topic_args2txt(name, rd, format = TRUE, quiet = TRUE)
-    .cmd <- gsub("^\\.?CLI_", '', name)
+
+is.CLIentry <- function(x) is(x, 'CLIentry')
+as.CLIentry <- function(x){
+    if( is.CLIentry(x) ) return(x)
     
-    ## PARSER
-    parser <- CLIArgumentParser(prog = paste(main, .cmd)
-            , description = .desc
-            , epilog = .details)
+    res <- list()
+    rd <- x
+    usage_string <- rd_tag2txt(rd, 'usage')
+    res$entry <- name <- gsub(" *([^( ]+).*", "\\1", usage_string)
+    res$command <- gsub("^CLI_", '', name)
+    .title <- rd_tag2txt(rd, 'title')
+    res$title <- gsub("^CLI: *", '', .title[[1]][[1]])
+    res$description <- rd_tag2txt(rd, 'description')
+    res$details <- rd_tag2txt(rd, 'details')
     
     # describe parameters
-    CLI_fun <- rd_tag2txt(rd, 'usage')
-    CLI_fun <- eval(parse(text = sprintf("function%s{}", gsub(name, '', CLI_fun))))   
+    .param <- rd_topic_args2txt(name, rd, format = TRUE, quiet = TRUE)
+    CLI_fun <- eval(parse(text = sprintf("function%s{}", gsub(name, '', usage_string))))   
 	defaults <- formals(CLI_fun)
-    mapply(function(p, d){
+    res$parameters <- mapply(function(p, d){
             # define specs
-            specs <- list(paste0("--", p))
+            specs <- list(long = p)
             # extract special arguments from help string
-            if( grepl("^ *[[] *-[^ ]", d) ){
-                abv_pattern <- "^ *[[] *(-[^ ,]+) *,?([^]]*)[]] *(.*)"
-                abv <- gsub(abv_pattern, "\\1", d)
-                specs <- c(abv, specs)
-                # extra arguments
-                if( nchar(extra <- gsub(abv_pattern, "\\2", d)) ){
-                    specs <- c(specs, eval(parse(text = sprintf("c(%s)", extra))))
-                }
-                d <- gsub(abv_pattern, "\\3", d)
+            abv_pattern <- "^ *[[] *(-([^ ,]+))? *,?([^]]*)[]] *(.*)"
+            if( grepl(abv_pattern, d) ){
+                    if( nchar(abv <- gsub(abv_pattern, "\\2", d)) )
+                        specs <- c(short = abv, specs)
+                    # extra arguments
+                    if( nchar(extra <- gsub(abv_pattern, "\\3", d)) ){
+                        specs <- c(specs, eval(parse(text = sprintf("c(%s)", extra))))
+                    }
+                    d <- gsub(abv_pattern, "\\4", d)
             }
             specs$help <- d
             if( !is.symbol(def <- defaults[[p]]) ) specs$default <- def
             else specs$required <- TRUE
             
-            # push argument into parser stack
-            do.call(parser$add_argument, specs)
-        }, names(.param), .param)
+            specs
+    }, names(.param), .param, SIMPLIFY = FALSE)
     #
+    
+    structure(res, class = 'CLIentry')
+}
+
+makeCLIentry <- function(name, main, path){
+        
+    rd <- rd_topic(name, path, simplify = FALSE)
+    res <- as.CLIentry(rd)
+    ## PARSER
+    parser <- CLIArgumentParser(prog = paste(main, res$command)
+                                , description = res$description
+                                , epilog = res$details)
+    
+    lapply(res$parameters, function(x){
+        
+        if( length(x$short) ) x$short <- paste0('-', x$short)
+        x$long <- paste0('--', gsub('_', '-', x$long, fixed = TRUE))
+        # remove names
+        i <- names(x) %in% c('short', 'long')
+        names(x)[i] <- ''
+        # push into argument stack
+        do.call(parser$add_argument, x)
+    })
     
     # WRAPPER
     fun <- function(ARGS = commandArgs(TRUE)){
@@ -139,5 +161,8 @@ makeCLIentry <- function(name, main, path){
         # call CLI function with arguments
         invisible(do.call(name, ARGS))
     }  
-    list(entry = name, command = .cmd, title = .title, fun = fun)
+    
+    res$fun <- fun
+    res
+#    list(entry = name, command = .cmd, title = .title, fun = fun)
 }
