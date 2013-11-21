@@ -19,24 +19,18 @@ CLIfile <- function(full = FALSE){
 
 #' Package Specific Command Line Interface
 #' 
-#' @param package package name
-#' @param altfile alternative file that defines the main CLI entry point. 
-#' That is a function named \code{CLI}, which takes the list of parsed command line 
-#' arguments as its first argument.
-#' @param local logical that indicates if the main CLI function should be 
-#' defined and evaluated in a local environment, or in the user's Global 
-#' environment.
-#' @param ARGS list of parsed arguments passed to the main CLI function.
+#' @param default command
+#' @param ARGS list of parsed arguments passed to the CLI entry point.
 #' @param ... extra arguments passed to the package's CLI function. 
+#' @param package name of the package that define the CLI entry points 
 #'   
 #' @export
 CLI <- function(default=NULL, ARGS = commandArgs(TRUE), ..., package = NULL){
     
     # build main CLI
-    CLI <- makeCLI(default = default, package = package)
-        
+    pkgCLI <- makeCLI(default = default, package = package)
     # run CLI
-    CLI(ARGS, ...)
+    pkgCLI(ARGS, ...)
 }
 
 makeCLI <- function(default = NULL, package = NULL){

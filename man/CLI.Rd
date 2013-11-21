@@ -6,22 +6,16 @@
     package = NULL)
 }
 \arguments{
-  \item{package}{package name}
+  \item{default}{command}
 
-  \item{altfile}{alternative file that defines the main CLI
-  entry point. That is a function named \code{CLI}, which
-  takes the list of parsed command line arguments as its
-  first argument.}
-
-  \item{local}{logical that indicates if the main CLI
-  function should be defined and evaluated in a local
-  environment, or in the user's Global environment.}
-
-  \item{ARGS}{list of parsed arguments passed to the main
-  CLI function.}
+  \item{ARGS}{list of parsed arguments passed to the CLI
+  entry point.}
 
   \item{...}{extra arguments passed to the package's CLI
   function.}
+
+  \item{package}{name of the package that define the CLI
+  entry points}
 }
 \description{
   Package Specific Command Line Interface
