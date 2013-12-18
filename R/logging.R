@@ -4,10 +4,13 @@
 # Author: Renaud Gaujoux
 # Created: Nov 21, 2013
 ###############################################################################
-
+#' @export
 cli_stop <- function(...) stop(..., call. = FALSE)
+
+#' @export
 cli_warning <- function(...) warning(..., call. = FALSE)
 
+#' @export
 cli_message <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
     if( is.null(item) ){ # choose item from indent
         .item <- c('*', '*', '-', '-', '>', '>') 
@@ -18,6 +21,7 @@ cli_message <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
     message(indent, item, ..., appendLF = appendLF)
 }
 
+#' @export
 cli_log <- function(..., appendLF = TRUE, extfile = NULL){
     
     # output to external file as well
@@ -28,6 +32,7 @@ cli_log <- function(..., appendLF = TRUE, extfile = NULL){
     
 }
 
+#' @export
 cli_smessage <- function(..., item = '', appendLF = TRUE){
     cli_message(..., item = item, appendLF = appendLF)
 }

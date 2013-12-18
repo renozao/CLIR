@@ -96,11 +96,22 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     p$print_help <- function(.){
         
         # get formatted help
+        #usage_string <- sub("usage:", '', paste(capture.output(.$.super$print_usage())))
         h <- paste(capture.output(.$.super$print_help()), collapse="\n")
         h <- sub(sprintf("%s", .$description_loc), .$description_str, h)
         
         # substitute dummy help by actual formated help  
         if( length(.$argument_help) ){
+#            rd <- .$rd[[1]]
+#            print(rd_list.tags(rd))
+#            i <- which(sapply(rd, function(x) attr(x, 'Rd_tag') == "\\usage" ))
+#            rd[[i]] <- structure(list(structure(usage_string, Rd_tag='RCODE')), Rd_tag = "\\usage")
+#            rd <- rd[-(1:2)]
+#            i <- which(sapply(rd, function(x) attr(x, 'Rd_tag') == "\\arguments" ))
+#            j <- which(sapply(rd[[i]], function(x) attr(x, 'Rd_tag') == "\\item" ))
+#            a <- unlist(sapply(rd[[i]][j], '[[', 1L))
+#            str(a)
+#            h <- RCLI:::rd_txt(rd)
             p <- sprintf("(.*)%s.*", .$.dummy_arg_help)
             i <- grep(p, hs <- strsplit(h, "\n")[[1]])
             pad <- max(nchar(a <- gsub(p, "\\1", hs[i])))
@@ -214,6 +225,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     # get command-specific parser
     cmd_fun <- parser$command[[command]]$fun
     cmd_parser <- cmd_fun(ARGS=NULL)
+#    print(cmd_parser$python_code)
     ARGS <- ARGS[-1L]
     
     if( !length(ARGS) ){
@@ -227,6 +239,9 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         
         # parse command arguments
         args <- cmd_parser$parse_args(ARGS)
+        # update CLI arguments
+        .CLIargs(args)
+#        str(args)
         
         # log call and parsed arguments		
         if( debug ){

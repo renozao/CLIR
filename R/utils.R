@@ -11,12 +11,14 @@ is_source_package <- function(path){
 load_package <- function(path){
     if( is_source_package(path) ){
         .silenceF(devtools::load_all)(path)
+        devtools::as.package(path)$package
     }else{
         lib <- normalizePath(dirname(path))
         ol <- .libPaths()
         .libPaths(c(lib, ol))
         on.exit(.libPaths(ol))
-        qlibrary(basename(path))
+        qlibrary(basename(path), character.only = TRUE)
+        basename(path)
     }
 }
 
@@ -48,4 +50,16 @@ qlibrary <- .silenceF(library, verbose = FALSE)
 
 .hasArgument <- function(ARGS){
     function(x) length(ARGS[[x]]) && nzchar(ARGS[[x]])
+}
+
+sVariable <- function(default=NULL){
+	.val <- default
+	function(value){
+		if( missing(value) ) .val
+		else{
+			old <- .val
+			.val <<- value
+			old
+		}
+	}
 }
