@@ -55,8 +55,43 @@ CLIargs <- function(format = c('parsed', 'raw', 'cmd'), skip = NULL, args = NULL
 #' @param ... extra arguments passed to the package's CLI function. 
 #' @param package name of the package that define the CLI entry points 
 #'   
+#' @import yaml
 #' @export
 CLI <- function(commands = NULL, default=NULL, ARGS = commandArgs(TRUE), ..., package = NULL){
+    
+    # check for yaml job config file
+    if( length(cf <- which(grepl("^--config-file", ARGS))) ){
+        if( grepl("=", ARGS[cf], fixed = TRUE) ){
+            ARGS <- c(ARGS[1:cf], gsub("^--config-file=", '', ARGS[cf]), tail(ARGS[-cf], length(ARGS) - cf))    
+        }
+        
+        conf_file <- 'config.yml'
+        if( cf < length(ARGS) && !grepl("^-", ARGS[cf+1L]) ){
+            conf_file <- ARGS[cf+1L]
+            ARGS <- ARGS[-c(cf, cf+1L)]
+        }
+        
+        # check for job array specification
+        array_var <- NULL
+        if( grepl(av_pattern <- "^(.*\\.yml)\\[([^]]+)\\]$", conf_file) ){
+            array_var <- eval(parse(text = gsub(av_pattern, "list(\\2)", conf_file)))
+            conf_file <- gsub(av_pattern, "\\1", conf_file)
+        }
+        ##
+        cli_message('Loading configuration file: ', conf_file, ' ... ')
+        config <- yaml.load_file(conf_file)
+        cli_smessage('OK [', length(config),' variables]')
+        if( !is.null(array_var) ){
+            if( is.null(config[[names(array_var)]]) ) config[[names(array_var)]] <- array_var[[1L]]
+            else config[[names(array_var)]] <- config[[names(array_var)]][array_var[[1L]]] 
+        }
+        ARGS <- config
+        
+        # show configuration
+        cli_message('Using configuration:', appendLF = TRUE)
+        str(ARGS)
+        #
+    }
     
     # build main CLI
     pkgCLI <- makeCLI(commands = commands, default = default, package = package)

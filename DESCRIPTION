@@ -8,10 +8,11 @@ Maintainer: Renaud Gaujoux <renaud@tx.technion.ac.il>
 Description: More about what it does (maybe more than one line)
 License: GPL >= 2
 Depends:
-	methods
+    methods
 Imports:
     tools,
-    argparse
+    argparse,
+    yaml
 Suggests:
     devtools
 Collate:
@@ -20,3 +21,4 @@ Collate:
     'parser.R'
     'rd.R'
     'logging.R'
+    'qsub.R'

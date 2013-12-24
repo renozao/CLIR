@@ -73,11 +73,14 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     
     p$.dummy_arg_help <- '__@@ARGHELP@@__'
     p$argument_help <- character()
+    p$argument_spec <- list()
     p$add_argument <- function(., ..., help = ''){
         .flag_newlines <- function(x){
             gsub("\n", "", x)
         }
-        .$argument_help <- c(.$argument_help, help) 
+        .$argument_help <- c(.$argument_help, help)
+        .$argument_spec <- c(.$argument_spec, list(list(...)))
+        class(.$argument_spec) <- 'simple.list' 
         help <- .flag_newlines(help)
         help <- .$.dummy_arg_help
         .$.super$add_argument(..., help = help)
@@ -182,11 +185,12 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #' @rdname CLIArgumentParser
 parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     
-    if( is.character(ARGS) && length(ARGS) == 1L  ){ # used in dev/debugging
-        ARGS <- strsplit(ARGS, ' ')[[1]]
+    if( is.character(ARGS) ){
+        if( length(ARGS) == 1L  ) ARGS <- strsplit(ARGS, ' ')[[1]] # used in dev/debugging
+        
+        # fix quotes to avoid python JSON parsing error
+        ARGS <- gsub("'", "\"", ARGS)
     }
-    # fix quotes to avoid python JSON parsing error
-    ARGS <- gsub("'", "\"", ARGS)
     
 #    library(pkgmaker, quietly = TRUE)
     # define command line arguments
@@ -197,8 +201,8 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     if( !length(ARGS) ){
         parser$print_usage()
         return( invisible(parser) )
-    }else if( !grepl("^-", ARGS[1L]) ){ # first argument is the command
-        command <- ARGS[1L]
+    }else if( !grepl("^-", ARGS[[1L]]) ){ # first argument is the command
+        command <- ARGS[[1L]]
         if( !command %in% names(parser$command) ){
             stop("unknown ", prog," command '", command, "'\n"
                     , "  Available commands: ", paste0(names(parser$command), collapse = ', ') 
@@ -217,7 +221,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         else{
             stop("Missing command:\n  "
                     , paste(capture.output(parser$print_usage()), collapse = "\n")
-                    , "\n  Available command(s): ", str_out(names(parser$command), Inf, quote=FALSE)
+                    , "\n  Available command(s): ", paste(names(parser$command), collapse = ", ")
                     , call. = FALSE)
         }
     }
@@ -238,7 +242,8 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     }else{
         
         # parse command arguments
-        args <- cmd_parser$parse_args(ARGS)
+        if( is.character(ARGS) ) args <- cmd_parser$parse_args(ARGS)
+        else args <- ARGS
         # update CLI arguments
         .CLIargs(args)
 #        str(args)
@@ -250,9 +255,10 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
             str(args)
         }
         #
-        
+
         # call command handler
         cmd_fun(ARGS = args)
     }
 }
+
 

@@ -2,14 +2,23 @@
 \alias{CLI}
 \title{Package Specific Command Line Interface}
 \usage{
-  CLI(default = NULL, ARGS = commandArgs(TRUE), ...,
-    package = NULL)
+  CLI(commands = NULL, default = NULL,
+    ARGS = commandArgs(TRUE), ..., package = NULL)
 }
 \arguments{
-  \item{default}{command}
+  \item{commands}{a character vector of command names that
+  correspond to functions in the package's namespace --
+  that are not necessarily exported. If \code{NULL}, then
+  the package's namespace is looked up for function names
+  with prefix \code{'CLI_'}.}
 
-  \item{ARGS}{list of parsed arguments passed to the CLI
-  entry point.}
+  \item{default}{default command, that should be an element
+  of \code{commands}. If \code{NULL}, then the CLI will
+  have no default, and will require a command to be
+  specified.}
+
+  \item{ARGS}{list of parsed arguments passed to the
+  command's function.}
 
   \item{...}{extra arguments passed to the package's CLI
   function.}
