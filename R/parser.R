@@ -174,6 +174,13 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 }
 
 
+cli_opt_parser <- function(){
+    
+    parser <- ArgumentParser()
+    parser$add_argument("--cli-qsub", help="extra qsub arguments", default = '')
+    parser
+}
+
 #' \code{parseCMD} parse command line arguments for sub-commands, 
 #' and dispatch to the associated function.
 #' 
@@ -195,6 +202,16 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
 #    library(pkgmaker, quietly = TRUE)
     # define command line arguments
     prog <- parser$prog
+    
+    # look for CLI global options (e.g., qsub etc...)
+    if( length(iopts <- grep("^--cli-", ARGS)) ){
+        opt_parser <- cli_opt_parser()
+        cli_opts <- opt_parser$parse_args(ARGS[iopts])
+        names(cli_opts) <- gsub("^cli_", '', names(cli_opts))
+        .CLIopts( cli_opts )
+        ARGS <- ARGS[-iopts]
+    }
+    ##
     
     # check validity of command
     # shows usage/help in trivial calls
@@ -245,7 +262,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         if( is.character(ARGS) ) args <- cmd_parser$parse_args(ARGS)
         else args <- ARGS
         # update CLI arguments
-        CLIR:::.CLIargs(args)
+        .CLIargs(args)
 #        str(args)
         
         # log call and parsed arguments		

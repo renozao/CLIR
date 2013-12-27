@@ -71,7 +71,11 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     
     # submit job
     cli_message("Submitting job ... ")
-    jobid <- system(paste0('qsub ', shfile), intern = TRUE)
+    qopts <- ''
+    if( !is.null(qopts <- .CLIopts()$qsub) ){
+        qopts <- paste(qopts, '')
+    }
+    jobid <- system(paste0('qsub ', qopts, shfile), intern = TRUE)
     cli_smessage('OK [', jobid, ']')
     invisible(jobid)
     

@@ -27,6 +27,7 @@ CLIfile <- function(full = FALSE){
 }
 
 .CLIargs <- sVariable()
+.CLIopts <- sVariable()
 
 #' \code{CLIargs} returns the command line arguments in various format.
 #' 
@@ -121,7 +122,7 @@ CLI <- function(commands = NULL, default=NULL, ARGS = commandArgs(TRUE), ..., pa
     pkgCLI <- makeCLI(commands = commands, default = default, package = package)
     # run CLI
     .CLIargs(ARGS)
-    on.exit( .CLIargs(NULL) )
+    on.exit( {.CLIargs(NULL); .CLIopts(NULL)} )
     pkgCLI(ARGS, ...)
 }
 
@@ -174,7 +175,7 @@ makeCLI <- function(commands = NULL, default = NULL, package = NULL){
 
         
 #        cat(parser$python_code, sep = "\n")
-        parser$parse_cmd(...)
+        parseCMD(parser, ...)
         
     }
 }
