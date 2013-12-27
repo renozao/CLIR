@@ -1,4 +1,4 @@
-Package: RCLI
+Package: CLIR
 Type: Package
 Title: Command Line Interface for R Packages
 Version: 1.0
