@@ -7,6 +7,15 @@
 #' @include utils.R
 NULL
 
+#' Current CLI Information
+#' 
+#' \code{CLIfile} returns the path to the current CLI script. 
+#' 
+#' @param full logical that indicates if the full path should be returned.
+#' If \code{FALSE} (default), only the filename is returned. 
+#' 
+#' @rdname CLI-utils
+#' @export
 CLIfile <- function(full = FALSE){
     pattern <- "--file=(.*)"
     if( !length(f <- grep(pattern, commandArgs(FALSE), value = TRUE)) ) ''
@@ -19,6 +28,21 @@ CLIfile <- function(full = FALSE){
 
 .CLIargs <- sVariable()
 
+#' \code{CLIargs} returns the command line arguments in various format.
+#' 
+#' @param format output format of the arguments:
+#' \describe{
+#' \item{'parsed'}{ a list of pairs argument/value, where the values were
+#' parsed and processed according to each argument specification.}
+#' \item{'raw'}{ same as \code{'parsed'}, but with values as passed 
+#' to the command line (not working)}
+#' \item{'cmd'}{ raw command line (not working)}
+#' }
+#' 
+#' @param skip names of arguments to remove from the result
+#' @param args character vector of arguments (raw values).
+#' If \code{NULL} then the current command line arguments are used.
+#' @rdname CLI-utils
 #' @export
 CLIargs <- function(format = c('parsed', 'raw', 'cmd'), skip = NULL, args = NULL){
     

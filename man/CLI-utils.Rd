@@ -1,0 +1,37 @@
+\name{CLIfile}
+\alias{CLIargs}
+\alias{CLIfile}
+\title{Current CLI Information}
+\usage{
+  CLIfile(full = FALSE)
+
+  CLIargs(format = c("parsed", "raw", "cmd"), skip = NULL,
+    args = NULL)
+}
+\arguments{
+  \item{full}{logical that indicates if the full path
+  should be returned. If \code{FALSE} (default), only the
+  filename is returned.}
+
+  \item{format}{output format of the arguments: \describe{
+  \item{'parsed'}{ a list of pairs argument/value, where
+  the values were parsed and processed according to each
+  argument specification.} \item{'raw'}{ same as
+  \code{'parsed'}, but with values as passed to the command
+  line (not working)} \item{'cmd'}{ raw command line (not
+  working)} }}
+
+  \item{skip}{names of arguments to remove from the result}
+
+  \item{args}{character vector of arguments (raw values).
+  If \code{NULL} then the current command line arguments
+  are used.}
+}
+\description{
+  \code{CLIfile} returns the path to the current CLI
+  script.
+
+  \code{CLIargs} returns the command line arguments in
+  various format.
+}
+

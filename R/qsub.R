@@ -4,13 +4,27 @@
 # Created: Dec 24, 2013
 ###############################################################################
 
+#' QSUB: Generic Job Submission to HPC Cluster
+#' 
+#' \code{cli_qsub} provides a generic way of submitting commands as jobs on an
+#' high performance computing cluster (HPC cluster).
+#' 
+#' @param cmd command line command
+#' @param job_name Job name, if provided as \code{NULL} or the empty string \code{''}, 
+#' then a unique job name is built based on the command and the current date.
+#' @param ... single named argument that specifies the command line argument (and its values) 
+#' that should be vectorized into a job array.
+#' @param skip names of the arguments in \code{args} to skip, i.e. to remove
+#' from the list of argument the job will run with.
+#' @param args command line arguments to be used by the/each job.
+#' @param email email address to which start/end/error notifications are sent. 
 #' @export
-cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = skip)){
+cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = skip), email = NULL){
     
     # get executed command line, dumping some arguments that will be changed the shell script
     main <- CLIfile()
     do_create_wd <- TRUE
-    if( !nzchar(job_name) ){
+    if( !length(job_name) || !nzchar(job_name) ){
         prefix <- paste0(main, '-', Sys.Date(), '_')
         n_old <- length(grep(paste0("^", prefix), list.dirs(recursive = FALSE, full.names = FALSE), value = TRUE))
         job_name <- basename(tempfile(sprintf("%s%04i_", prefix, n_old + 1)))
@@ -52,7 +66,8 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     job_config_file <- sprintf("%s%s", job_config_file, array_spec)
     
     # generate qsub script
-    shfile <- write.qsub(job_name, sprintf("%s %s --config-file=%s", main, cmd, job_config_file), end = n)
+    shfile <- write.qsub(job_name, sprintf("%s %s --config-file=%s", main, cmd, job_config_file), end = n
+                        , email = email)
     
     # submit job
     cli_message("Submitting job ... ")
@@ -62,8 +77,7 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     
 }
 
-#' @export
-write.qsub <- function(jobname, cmd, args = NULL, start = 1L, end = 1L){
+write.qsub <- function(jobname, cmd, args = NULL, start = 1L, end = 1L, email = NULL){
     
     template <- '#!/bin/sh
 #
@@ -78,7 +92,7 @@ write.qsub <- function(jobname, cmd, args = NULL, start = 1L, end = 1L){
 cd $PBS_O_WORKDIR
 echo "Sub-job number: %qsub_arrayid%"
 
-env > env.txt
+# env > env.txt
 
 log_dir=log
 mkdir -p $log_dir
@@ -104,8 +118,8 @@ touch $DONE_FILE
     # create qsub script
     cli_message("Generating qsub script:", appendLF = TRUE)
     res <- template
-    cli_smessage('Submitter: ', .DB_MAINTAINER_EMAIL, appendLF = TRUE, indent = 2L)
-    res <- gsub("%job_email%", .DB_MAINTAINER_EMAIL, res)
+    cli_smessage('Submitter: ', Sys.info()['user'], appendLF = TRUE, indent = 2L)
+    if( length(email) ) res <- gsub("%job_email%", email, res)
     #
     cli_smessage('Job: ', jobname, appendLF = TRUE, indent = 2L)
     res <- gsub("%job_name%", jobname, res)
@@ -138,10 +152,22 @@ touch $DONE_FILE
 
 qsub_envar <- function(x){
     
-    if( identical(class(x), 'character') ) x <- structure(character(), class = x)
-    map <- UseMethod('qsub_envar', x)
+    # get env variable for the given queueing system
+    map <- UseMethod('qsub_envar')
+    
+    # filter out if necessary
     if( length(x) ) map <- map[x]
+    
     map
+}
+
+qsub_envar.default <- function(x){
+    
+    if( missing(x) ) x <- 'PBS'
+    # use value of plain character objects as class specification 
+    if( identical(class(x), 'character') ) x <- structure(character(), class = x)
+
+    qsub_envar(x)
 }
 
 qsub_envar.PBS <- function(x){

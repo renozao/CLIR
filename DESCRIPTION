@@ -6,12 +6,13 @@ Date: 2013-11-01
 Author: Renaud Gaujoux
 Maintainer: Renaud Gaujoux <renaud@tx.technion.ac.il>
 Description: More about what it does (maybe more than one line)
-License: GPL >= 2
+License: GPL (>=2)
 Depends:
     methods
 Imports:
     tools,
     argparse,
+    proto,
     yaml
 Suggests:
     devtools

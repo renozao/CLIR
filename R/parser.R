@@ -17,11 +17,11 @@
 #' be displayed. 
 #' 
 #' @export
-#' @import argparse
+#' @import argparse proto
 CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = '', show.defaults = TRUE){
     
     # load argparse
-    suppressMessages( library(argparse, quietly = TRUE) )
+    #suppressMessages( library(argparse, quietly = TRUE) )
     
     .flag_newlines <- function(x){
         gsub("\n", "", x)
@@ -245,7 +245,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         if( is.character(ARGS) ) args <- cmd_parser$parse_args(ARGS)
         else args <- ARGS
         # update CLI arguments
-        .CLIargs(args)
+        RCLI:::.CLIargs(args)
 #        str(args)
         
         # log call and parsed arguments		
