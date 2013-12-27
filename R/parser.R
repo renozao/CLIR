@@ -1,4 +1,4 @@
-# Project: RCLI
+# Project: CLIR
 # 
 # Author: Renaud Gaujoux
 # Created: Nov 20, 2013
@@ -114,7 +114,7 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #            j <- which(sapply(rd[[i]], function(x) attr(x, 'Rd_tag') == "\\item" ))
 #            a <- unlist(sapply(rd[[i]][j], '[[', 1L))
 #            str(a)
-#            h <- RCLI:::rd_txt(rd)
+#            h <- CLIR:::rd_txt(rd)
             p <- sprintf("(.*)%s.*", .$.dummy_arg_help)
             i <- grep(p, hs <- strsplit(h, "\n")[[1]])
             pad <- max(nchar(a <- gsub(p, "\\1", hs[i])))
@@ -159,7 +159,7 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     }
         
     # command parer
-    p$parse_cmd <- RCLI::parseCMD
+    p$parse_cmd <- CLIR::parseCMD
     
     p
 }
@@ -245,7 +245,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         if( is.character(ARGS) ) args <- cmd_parser$parse_args(ARGS)
         else args <- ARGS
         # update CLI arguments
-        RCLI:::.CLIargs(args)
+        CLIR:::.CLIargs(args)
 #        str(args)
         
         # log call and parsed arguments		

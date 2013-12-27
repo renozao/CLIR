@@ -1,4 +1,4 @@
-# Project: RCLI
+# Project: CLIR
 # 
 # Author: Renaud Gaujoux
 # Created: Nov 20, 2013

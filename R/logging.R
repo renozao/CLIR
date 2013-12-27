@@ -1,4 +1,4 @@
-# Project: RCLI
+# Project: CLIR
 # Log messages and error utils
 #
 # Author: Renaud Gaujoux
