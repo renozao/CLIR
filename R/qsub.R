@@ -26,7 +26,7 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     do_create_wd <- TRUE
     if( !length(job_name) || !nzchar(job_name) ){
         prefix <- paste0(main, '-', Sys.Date(), '_')
-        n_old <- length(grep(paste0("^", prefix), basenames(list.dirs(recursive = FALSE, full.names = FALSE), value = TRUE)))
+        n_old <- length(grep(paste0("^", prefix), basename(list.dirs(recursive = FALSE, full.names = FALSE), value = TRUE)))
         job_name <- basename(tempfile(sprintf("%s%04i_", prefix, n_old + 1)))
     }else if( job_name == '.' ){
         job_name <- basename(getwd())
