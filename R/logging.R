@@ -25,7 +25,7 @@ cli_warning <- function(...) warning(..., call. = FALSE)
 #' @inheritParams base::message
 #' @rdname CLI-logging
 #' @export
-cli_message <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
+cli_smessage <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
     if( is.null(item) ){ # choose item from indent
         .item <- c('*', '*', '-', '-', '>', '>') 
         item <- .item[indent+1]
@@ -52,8 +52,8 @@ cli_log <- function(..., appendLF = TRUE, extfile = NULL){
 
 #' @rdname CLI-logging
 #' @export
-cli_smessage <- function(..., item = '', appendLF = TRUE){
-    cli_message(..., item = item, appendLF = appendLF)
+cli_message <- function(..., item = '', appendLF = TRUE){
+    cli_smessage(..., item = item, appendLF = appendLF)
 }
 
 tryCatchWarning <- local({
