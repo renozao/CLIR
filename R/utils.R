@@ -67,3 +67,20 @@ sVariable <- function(default=NULL){
 }
 
 isFALSE <- function(x) identical(x, FALSE)
+
+#' YAML Utilities
+#' 
+#' @inheritParams yaml::as.yaml
+#' @inheritParams base::write
+#' @export
+#' @rdname yaml
+write.yaml <- function(x, file, append = FALSE, ...){
+    write(as.yaml(x, ...), file = file, append = append)
+}
+
+#' @inheritParams yaml::yaml.load_file
+#' @export
+#' @rdname yaml
+#' @import yaml
+read.yaml <- yaml.load_file
+        
