@@ -8,12 +8,12 @@ Maintainer: Renaud Gaujoux <renaud@tx.technion.ac.il>
 Description: More about what it does (maybe more than one line)
 License: GPL (>=2)
 Depends:
-    methods
+    methods,
+    yaml
 Imports:
     tools,
     argparse,
-    proto,
-    yaml
+    proto
 Suggests:
     devtools
 Collate:

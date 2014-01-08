@@ -59,13 +59,13 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     }
     
     # add a (sub-)command
-    p$add_command <- function(., command, fun, help='', ..., default = FALSE){
+    p$add_command <- function(., command, fun, parser = NULL, help='', ..., default = FALSE){
         # add command argument if necessary
         if( !length(.$command) ){
             .$.super$add_argument('command', help = paste0(.$prog, ' command to run'))
         }
         # store command
-        .$command[[command]] <- list(fun = fun, help = help)	
+        .$command[[command]] <- list(fun = fun, parser = parser, help = help)	
         # store command as default
         if( default ) .$command_idefault <- length(.$command)
     }
@@ -174,13 +174,6 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 }
 
 
-cli_opt_parser <- function(){
-    
-    parser <- ArgumentParser()
-    parser$add_argument("--cli-qsub", help="extra qsub arguments", default = '')
-    parser
-}
-
 #' \code{parseCMD} parse command line arguments for sub-commands, 
 #' and dispatch to the associated function.
 #' 
@@ -202,16 +195,6 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
 #    library(pkgmaker, quietly = TRUE)
     # define command line arguments
     prog <- parser$prog
-    
-    # look for CLI global options (e.g., qsub etc...)
-    if( length(iopts <- grep("^--cli-", ARGS)) ){
-        opt_parser <- cli_opt_parser()
-        cli_opts <- opt_parser$parse_args(ARGS[iopts])
-        names(cli_opts) <- gsub("^cli_", '', names(cli_opts))
-        .CLIopts( cli_opts )
-        ARGS <- ARGS[-iopts]
-    }
-    ##
     
     # check validity of command
     # shows usage/help in trivial calls
@@ -245,8 +228,12 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     
     # get command-specific parser
     cmd_fun <- parser$command[[command]]$fun
-    cmd_parser <- cmd_fun(ARGS=NULL)
-#    print(cmd_parser$python_code)
+    cmd_parser <- parser$command[[command]]$parser
+    
+    # add CLI arguments
+    cmd_parser <- .setCLIArguments(cmd_parser)
+    
+    #    print(cmd_parser$python_code)
     ARGS <- ARGS[-1L]
     
     if( !length(ARGS) ){
@@ -261,6 +248,10 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         # parse command arguments
         if( is.character(ARGS) ) args <- cmd_parser$parse_args(ARGS)
         else args <- ARGS
+        
+        # check for CLI arguments
+        args <- .processCLIArguments(args)
+        
         # update CLI arguments
         .CLIargs(args)
 #        str(args)
@@ -278,4 +269,57 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     }
 }
 
+.setCLIArguments <- function(parser){
+    
+    # config file
+    parser$add_argument("--cli-config" 
+            , help="YAML configuration file that contains specifications of command line arguments."
+            , nargs = '?', const = 'config.xml'
+            , metavar = 'FILE')
+    # qsub 
+    parser$add_argument("--cli-qsub", help="extra qsub arguments"
+                        , metavar='QSUB OPTIONS')
+    
+    parser
+}
+
+.processCLIArguments <- function(ARGS){
+    
+    # check for yaml job config file
+    conf_file <- ARGS$cli_config
+    if( !is.null(conf_file) ){
+        
+        # check for job array specification
+        array_var <- NULL
+        if( grepl(av_pattern <- "^(.*\\.yml)\\[([^]]+)\\]$", conf_file) ){
+            array_var <- eval(parse(text = gsub(av_pattern, "list(\\2)", conf_file)))
+            conf_file <- gsub(av_pattern, "\\1", conf_file)
+        }
+        ##
+        cli_message('Loading configuration file: ', conf_file, ' ... ')
+        config <- read.yaml(conf_file)
+        cli_smessage('OK [', length(config),' variables]')
+        if( !is.null(array_var) ){
+            if( is.null(config[[names(array_var)]]) ) config[[names(array_var)]] <- array_var[[1L]]
+            else config[[names(array_var)]] <- config[[names(array_var)]][array_var[[1L]]] 
+        }
+        
+        # update argument list
+        ARGS <- append(ARGS, config[setdiff(names(config), names(ARGS))])
+        # show configuration
+        cli_message('Used configuration:', appendLF = TRUE)
+        str(ARGS)
+        #
+    }
+    
+    # look for CLI global options (e.g., qsub etc...)
+    if( length(iopts <- grep("^cli_", names(ARGS))) ){
+        .CLIopts( ARGS[iopts] )
+        ARGS <- ARGS[-iopts]
+    }
+    ##
+    
+    ARGS
+    
+}
 

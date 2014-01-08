@@ -84,42 +84,43 @@ CLIargs <- function(format = c('parsed', 'raw', 'cmd'), skip = NULL, args = NULL
 #' @export
 CLI <- function(commands = NULL, default=NULL, ARGS = commandArgs(TRUE), ..., package = NULL){
     
-    # check for yaml job config file
-    if( length(cf <- which(grepl("^--config-file", ARGS))) ){
-        if( grepl("=", ARGS[cf], fixed = TRUE) ){
-            ARGS <- c(ARGS[1:cf], gsub("^--config-file=", '', ARGS[cf]), tail(ARGS[-cf], length(ARGS) - cf))    
-        }
-        
-        conf_file <- 'config.yml'
-        if( cf < length(ARGS) && !grepl("^-", ARGS[cf+1L]) ){
-            conf_file <- ARGS[cf+1L]
-            ARGS <- ARGS[-c(cf, cf+1L)]
-        }
-        
-        # check for job array specification
-        array_var <- NULL
-        if( grepl(av_pattern <- "^(.*\\.yml)\\[([^]]+)\\]$", conf_file) ){
-            array_var <- eval(parse(text = gsub(av_pattern, "list(\\2)", conf_file)))
-            conf_file <- gsub(av_pattern, "\\1", conf_file)
-        }
-        ##
-        cli_message('Loading configuration file: ', conf_file, ' ... ')
-        config <- yaml.load_file(conf_file)
-        cli_smessage('OK [', length(config),' variables]')
-        if( !is.null(array_var) ){
-            if( is.null(config[[names(array_var)]]) ) config[[names(array_var)]] <- array_var[[1L]]
-            else config[[names(array_var)]] <- config[[names(array_var)]][array_var[[1L]]] 
-        }
-        ARGS <- config
-        
-        # show configuration
-        cli_message('Using configuration:', appendLF = TRUE)
-        str(ARGS)
-        #
-    }
+#    # check for yaml job config file
+#    if( length(cf <- which(grepl("^--config-file", ARGS))) ){
+#        if( grepl("=", ARGS[cf], fixed = TRUE) ){
+#            ARGS <- c(ARGS[1:cf], gsub("^--config-file=", '', ARGS[cf]), tail(ARGS[-cf], length(ARGS) - cf))    
+#        }
+#        
+#        conf_file <- 'config.yml'
+#        if( cf < length(ARGS) && !grepl("^-", ARGS[cf+1L]) ){
+#            conf_file <- ARGS[cf+1L]
+#            ARGS <- ARGS[-c(cf, cf+1L)]
+#        }
+#        
+#        # check for job array specification
+#        array_var <- NULL
+#        if( grepl(av_pattern <- "^(.*\\.yml)\\[([^]]+)\\]$", conf_file) ){
+#            array_var <- eval(parse(text = gsub(av_pattern, "list(\\2)", conf_file)))
+#            conf_file <- gsub(av_pattern, "\\1", conf_file)
+#        }
+#        ##
+#        cli_message('Loading configuration file: ', conf_file, ' ... ')
+#        config <- yaml.load_file(conf_file)
+#        cli_smessage('OK [', length(config),' variables]')
+#        if( !is.null(array_var) ){
+#            if( is.null(config[[names(array_var)]]) ) config[[names(array_var)]] <- array_var[[1L]]
+#            else config[[names(array_var)]] <- config[[names(array_var)]][array_var[[1L]]] 
+#        }
+#        ARGS <- config
+#        
+#        # show configuration
+#        cli_message('Using configuration:', appendLF = TRUE)
+#        str(ARGS)
+#        #
+#    }
     
     # build main CLI
     pkgCLI <- makeCLI(commands = commands, default = default, package = package)
+    qlibrary('CLIR', character.only = TRUE)
     # run CLI
     .CLIargs(ARGS)
     on.exit( {.CLIargs(NULL); .CLIopts(NULL)} )
@@ -170,7 +171,7 @@ makeCLI <- function(commands = NULL, default = NULL, package = NULL){
         # use first command if no default was provided
         # add a command for each entry point    
         lapply(.CLI_entries, function(e){
-            parser$add_command(e$command, e$fun, e$title, default = identical(e$command, default))
+            parser$add_command(e$command, e$fun, e$parser, e$title, default = identical(e$command, default))
         })
 
         
@@ -249,30 +250,53 @@ makeCLIentry <- function(entry, main, path, name = NULL){
         # push into argument stack
         do.call(parser$add_argument, x)
     })
-    
+
     # WRAPPER
-    fun <- function(ARGS = commandArgs(TRUE)){
-        
-#        cat(parser$python_code, sep = "\n")
-        
-        # return parser if no arguments
-        if( nargs() == 0L || is.null(ARGS) ) return( parser )
-        if( is.character(ARGS) ){ # used in dev/debugging
-            # parse arguments if needed
-            ARGS <- parser$parse_args(ARGS)
-            message('Call: ', parser$call_string(ARGS))
-            message('Parsed arguments:')
-            str(ARGS)
-        }
-        
-        # load package from path
-        pkg <- load_package(path)
-        entry <- getFunction(entry, where = asNamespace(pkg))
-        # call CLI function with arguments
-        invisible(do.call(entry, ARGS))
-    }  
+#    fun <- function(ARGS = commandArgs(TRUE)){
+#        
+##        cat(parser$python_code, sep = "\n")
+#        
+#        # return parser if no arguments
+#        if( nargs() == 0L || is.null(ARGS) ) return( parser )
+#        if( is.character(ARGS) ){ # used in dev/debugging
+#            # parse arguments if needed
+#            ARGS <- parser$parse_args(ARGS)
+#            message('Call: ', parser$call_string(ARGS))
+#            message('Parsed arguments:')
+#            str(ARGS)
+#        }
+#        
+#        # wrap entry function into special CLI environment
+#        entry <- makeCLIfunction(entry, path)
+#        
+#        # call CLI function with arguments
+#        invisible(do.call(entry, ARGS))
+#    }  
     
-    res$fun <- fun
+    res$parser <- parser
+    res$fun <- makeCLIfunction(entry, path)
     res
 #    list(entry = name, command = .cmd, title = .title, fun = fun)
+}
+
+makeCLIfunction <- function(entry, path){
+    
+    # load function
+    pkg <- load_package(path)
+    entry <- getFunction(entry, where = asNamespace(pkg))
+    
+    # wrap into special CLI environment 
+    cli_env <- new.env(parent = environment(entry))
+    cli_env$message <- cli_message
+    cli_env$smessage <- cli_smessage
+    cli_env$stop <- cli_stop
+    cli_env$warning <- cli_warning
+    environment(entry) <- cli_env
+    #
+    
+    # returned wrapper function
+    function(ARGS){
+        # call modified CLI function with arguments
+        invisible(do.call(entry, ARGS))
+    }
 }

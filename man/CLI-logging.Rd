@@ -10,12 +10,12 @@
 
   cli_warning(...)
 
-  cli_message(..., indent = 0L, item = NULL,
+  cli_smessage(..., indent = 0L, item = NULL,
     appendLF = FALSE)
 
   cli_log(..., appendLF = TRUE, extfile = NULL)
 
-  cli_smessage(..., item = "", appendLF = TRUE)
+  cli_message(..., item = "", appendLF = TRUE)
 }
 \arguments{
   \item{...}{arguments passed to the corresponding base

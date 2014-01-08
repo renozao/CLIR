@@ -66,7 +66,7 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     job_config_file <- sprintf("%s%s", job_config_file, array_spec)
     
     # generate qsub script
-    shfile <- write.qsub(job_name, sprintf("%s %s --config-file=%s", main, cmd, job_config_file), end = n
+    shfile <- write.qsub(job_name, sprintf("%s %s --cli-config=%s", main, cmd, job_config_file), end = n
                         , email = email)
     
     # submit job
