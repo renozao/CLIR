@@ -3,7 +3,8 @@
 \title{QSUB: Generic Job Submission to HPC Cluster}
 \usage{
   cli_qsub(cmd, job_name, ..., skip = "qsub",
-    args = CLIargs(skip = skip), email = NULL)
+    args = CLIargs(skip = skip), email = NULL,
+    fake = FALSE)
 }
 \arguments{
   \item{cmd}{command line command}
@@ -25,6 +26,9 @@
 
   \item{email}{email address to which start/end/error
   notifications are sent.}
+
+  \item{fake}{logical that indicates if the qsub command
+  should actually be run or not.}
 }
 \description{
   \code{cli_qsub} provides a generic way of submitting

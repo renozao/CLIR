@@ -18,8 +18,9 @@
 #' from the list of argument the job will run with.
 #' @param args command line arguments to be used by the/each job.
 #' @param email email address to which start/end/error notifications are sent. 
+#' @param fake logical that indicates if the qsub command should actually be run or not.
 #' @export
-cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = skip), email = NULL){
+cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = skip), email = NULL, fake = FALSE){
     
     # get executed command line, dumping some arguments that will be changed the shell script
     main <- CLIfile()
@@ -75,9 +76,15 @@ cli_qsub <- function(cmd, job_name, ..., skip = 'qsub', args = CLIargs(skip = sk
     if( !is.null(qopts <- .CLIopts()$qsub) ){
         qopts <- paste(qopts, '')
     }
-    jobid <- system(paste0('qsub ', qopts, shfile), intern = TRUE)
-    cli_smessage('OK [', jobid, ']')
-    invisible(jobid)
+    cmd <- paste0('qsub ', qopts, shfile)
+    if( !fake ){
+        jobid <- system(cmd, intern = TRUE)
+        cli_smessage('OK [', jobid, ']')
+        invisible(jobid)
+    }else{
+        cli_smessage('SKIP (fake run)')
+        cli_message("Command: ", cmd, appendLF = TRUE)
+    }
     
 }
 
