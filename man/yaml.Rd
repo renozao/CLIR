@@ -3,20 +3,28 @@
 \alias{write.yaml}
 \title{YAML Utilities}
 \usage{
-  write.yaml(x, file, append = FALSE, ...)
+  write.yaml(x, file, append = FALSE, ...,
+    .metaheader = TRUE)
 
   read.yaml(input, ...)
 }
 \arguments{
+  \item{.metaheader}{logical that indicates if a metadata header tha includes date time, SHA and
+\pkgname{CLIR} version number should be added as leading comments.
+
+Can also be a character vector, which is then written "as is", one element per line (each line is
+prefixed with a "#").}
+
   \item{x}{ the object to be converted }
 
-  \item{file}{A connection, or a character string naming
-  the file to write to.  If \code{""}, print to the
-  standard output connection.  If it is \code{"|cmd"}, the
-  output is piped to the command given by \file{cmd}.  }
+  \item{file}{A connection, or a character string naming the file to write to.
+    If \code{""}, print to the standard output connection.
+    If it is \code{"|cmd"}, the output is piped to the command given
+    by \file{cmd}.
+  }
 
-  \item{append}{if \code{TRUE} the data \code{x} are
-  appended to the connection.}
+  \item{append}{if \code{TRUE} the data \code{x} are appended to the
+    connection.}
 
   \item{...}{ arguments to pass to yaml.load }
 

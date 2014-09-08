@@ -9,26 +9,20 @@
 \arguments{
   \item{cmd}{command line command}
 
-  \item{job_name}{Job name, if provided as \code{NULL} or
-  the empty string \code{''}, then a unique job name is
-  built based on the command and the current date.}
+  \item{job_name}{Job name, if provided as \code{NULL} or the empty string \code{''},
+then a unique job name is built based on the command and the current date.}
 
-  \item{...}{single named argument that specifies the
-  command line argument (and its values) that should be
-  vectorized into a job array.}
+  \item{...}{single named argument that specifies the command line argument (and its values)
+that should be vectorized into a job array.}
 
-  \item{skip}{names of the arguments in \code{args} to
-  skip, i.e. to remove from the list of argument the job
-  will run with.}
+  \item{skip}{names of the arguments in \code{args} to skip, i.e. to remove
+from the list of argument the job will run with.}
 
-  \item{args}{command line arguments to be used by the/each
-  job.}
+  \item{args}{command line arguments to be used by the/each job.}
 
-  \item{email}{email address to which start/end/error
-  notifications are sent.}
+  \item{email}{email address to which start/end/error notifications are sent.}
 
-  \item{fake}{logical that indicates if the qsub command
-  should actually be run or not.}
+  \item{fake}{logical that indicates if the qsub command should actually be run or not.}
 }
 \description{
   \code{cli_qsub} provides a generic way of submitting

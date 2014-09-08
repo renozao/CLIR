@@ -18,20 +18,17 @@
   cli_message(..., item = "", appendLF = TRUE)
 }
 \arguments{
-  \item{...}{arguments passed to the corresponding base
-  function.}
+  \item{...}{arguments passed to the corresponding base function.}
 
   \item{indent}{number of indent spaces}
 
-  \item{item}{itemize character to use, e.g., \code{'*'} or
-  \code{'-'}.}
+  \item{item}{itemize character to use, e.g., \code{'*'} or \code{'-'}.}
 
-  \item{extfile}{external log file where to save log
-  messages. Note that messages are still shown in
-  \emph{stderr}.}
+  \item{extfile}{external log file where to save log messages.
+Note that messages are still shown in \emph{stderr}.}
 
-  \item{appendLF}{logical: should messages given as a
-  character string have a newline appended?}
+  \item{appendLF}{logical: should messages given as a character string
+    have a newline appended?}
 }
 \description{
   The function \code{cli_*} wrap calls to the corresponding
