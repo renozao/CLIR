@@ -72,9 +72,27 @@ isFALSE <- function(x) identical(x, FALSE)
 #' 
 #' @inheritParams yaml::as.yaml
 #' @inheritParams base::write
+#' @param .metaheader logical that indicates if a metadata header tha includes date time, SHA and 
+#' \pkgname{CLIR} version number should be added as leading comments.
+#' 
+#' Can also be a character vector, which is then written "as is", one element per line (each line is 
+#' prefixed with a "#").
+#' 
 #' @export
 #' @rdname yaml
-write.yaml <- function(x, file, append = FALSE, ...){
+#' @importFrom digest digest
+write.yaml <- function(x, file, append = FALSE, ..., .metaheader = TRUE){
+    
+    # add metaheader
+    if( !isFALSE(.metaheader) ){
+        
+        if( isTRUE(.metaheader) ){ # build metaheader
+            meta <- c(Date = date(), SHA = digest(list(date(), list(x, ...))))
+            .metaheader <- c(sprintf("%s: %s", names(meta), meta), sprintf("Package CLIR-%s", packageVersion('CLIR')))
+       }
+       write(paste0("# ", .metaheader, "\n", collapse = ""), file = file, append = append)
+    }
+    
     write(as.yaml(x, ...), file = file, append = append)
 }
 
