@@ -73,7 +73,7 @@ isFALSE <- function(x) identical(x, FALSE)
 #' @inheritParams yaml::as.yaml
 #' @inheritParams base::write
 #' @param .metaheader logical that indicates if a metadata header tha includes date time, SHA and 
-#' \pkgname{CLIR} version number should be added as leading comments.
+#' \pkg{CLIR} version number should be added as leading comments.
 #' 
 #' Can also be a character vector, which is then written "as is", one element per line (each line is 
 #' prefixed with a "#").
@@ -88,9 +88,10 @@ write.yaml <- function(x, file, append = FALSE, ..., .metaheader = TRUE){
         
         if( isTRUE(.metaheader) ){ # build metaheader
             meta <- c(Date = date(), SHA = digest(list(date(), list(x, ...))))
-            .metaheader <- c(sprintf("%s: %s", names(meta), meta), sprintf("Package CLIR-%s", packageVersion('CLIR')))
+            .metaheader <- c(sprintf("%s: %s", names(meta), meta), sprintf("CLIR: %s", packageVersion('CLIR')))
        }
-       write(paste0("# ", .metaheader, "\n", collapse = ""), file = file, append = append)
+       cat(paste0("# ", .metaheader), file = file, append = append, sep = "\n")
+       append <- TRUE
     }
     
     write(as.yaml(x, ...), file = file, append = append)
@@ -102,3 +103,49 @@ write.yaml <- function(x, file, append = FALSE, ..., .metaheader = TRUE){
 #' @import yaml
 read.yaml <- yaml.load_file
         
+
+#' @export
+cli_arg <- function(x, default = NULL, long = FALSE, required = FALSE){
+    args <- commandArgs(TRUE)
+    if( long ) x <- paste0('--', x)
+    if( length(i <- which(args == x)) ){
+		if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
+		else TRUE
+    }else if( required ){
+        stop("Argument '", x, "' is required.", call. = FALSE)
+    }else default
+}
+
+#' @export
+cli_self <- function(full = TRUE){
+    CLIfile(full)
+}
+
+#' @export 
+cli_spin <- function(outdir, ..., .config = 'config.yml'){
+    
+    # setup run directory
+    if( file.exists(outdir) ){
+        unlink(outdir, recursive = TRUE)
+    }
+    dir.create(outdir, recursive = TRUE)
+    
+    # copy script
+    self <- cli_self()
+    file.copy(self, outdir)
+    rscript <- file.path(outdir, basename(self))
+    l <- readLines(rscript)
+    cat(l[-seq(1L, grep("^quit\\(\\)", l)[1L])], file = rscript, sep = "\n")
+    
+    owd <- setwd(outdir)
+    on.exit(setwd(owd))
+    
+    # write config file
+    write.yaml(list(...), file = .config)
+    
+    library(knitr)
+    spin(basename(rscript))
+}
+
+
+

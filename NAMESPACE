@@ -1,5 +1,8 @@
 export(write.yaml)
 export(read.yaml)
+export(cli_arg)
+export(cli_self)
+export(cli_spin)
 export(CLIfile)
 export(CLIargs)
 export(CLI)

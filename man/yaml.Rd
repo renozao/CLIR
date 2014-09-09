@@ -10,7 +10,7 @@
 }
 \arguments{
   \item{.metaheader}{logical that indicates if a metadata header tha includes date time, SHA and
-\pkgname{CLIR} version number should be added as leading comments.
+\pkg{CLIR} version number should be added as leading comments.
 
 Can also be a character vector, which is then written "as is", one element per line (each line is
 prefixed with a "#").}
