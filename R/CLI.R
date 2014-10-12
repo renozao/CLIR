@@ -21,7 +21,7 @@ CLIfile <- function(full = FALSE){
     if( !length(f <- grep(pattern, commandArgs(FALSE), value = TRUE)) ) ''
     else{
         pf <- gsub(pattern, "\\1", f[1L])
-        if( full ) normalizePath(pf)
+        if( full ) normalizePath(pf, mustWork = TRUE)
         else basename(pf)
     }
 }
