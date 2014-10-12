@@ -157,7 +157,7 @@ cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
     }
     dir.create(outdir, recursive = TRUE)
     .file <- normalizePath(.file, mustWork = TRUE)
-    rscript <- normalizePath(file.path(outdir, basename(.file)))
+    rscript <- normalizePath(file.path(outdir, basename(.file)), mustWork = FALSE)
     # ensure that the generated file does not overwrite the orginal script 
     if( rscript == .file ){
         i <- 1
