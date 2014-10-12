@@ -104,16 +104,42 @@ write.yaml <- function(x, file, append = FALSE, ..., .metaheader = TRUE){
 read.yaml <- yaml.load_file
         
 
+#' Extracting Command Line Arguments
+#' 
+#' @param x parameter name, e.g., \code{'-f'}
+#' @param default default value to return if parameter is missing
+#' @param alt alternative parameter name, e.g. long form code{'--file'} 
+#' @param required logical that indicates if the parameter is required.
+#' @param trailing.only logical that indicates if the parameter should be looked
+#' in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.  
+#' 
 #' @export
-cli_arg <- function(x, default = NULL, long = FALSE, required = FALSE){
-    args <- commandArgs(TRUE)
-    if( long ) x <- paste0('--', x)
-    if( length(i <- which(args == x)) ){
-		if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
-		else TRUE
-    }else if( required ){
-        stop("Argument '", x, "' is required.", call. = FALSE)
-    }else default
+cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE){
+    
+    # return running script if NULL
+    if( is.null(x) ) return( cli_self(TRUE) )
+    if( missing(x) ) return( commandArgs(trailing.only) )
+    
+    res <- default
+    args <- commandArgs(trailing.only)
+    if( is.numeric(x) ){ # positional argument
+        pargs <- grep("^-", args, invert = TRUE, value = TRUE)
+        if( length(pargs) >= x ) res <- pargs[x]
+        else if( required ) stop("Missing required argument ", x, ".", call. = FALSE)
+        
+    }else{
+        if( !length(i <- which(args == x)) && !is.null(alt)){
+            i <- which(args == alt)
+        }
+        if( length(i) ){
+            res <- if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
+                    else TRUE
+            
+        }else if( required ) stop("Argument '", x, "' is required.", call. = FALSE)
+    }
+    
+    # return value
+    res
 }
 
 #' @export
