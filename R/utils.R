@@ -147,21 +147,33 @@ cli_self <- function(full = TRUE){
     CLIfile(full)
 }
 
+#' @importFrom tools file_path_sans_ext file_ext
 #' @export 
-cli_spin <- function(outdir, ..., .config = 'config.yml'){
+cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
     
     # setup run directory
     if( file.exists(outdir) ){
         unlink(outdir, recursive = TRUE)
     }
     dir.create(outdir, recursive = TRUE)
-    
+    .file <- normalizePath(.file, mustWork = TRUE)
+    rscript <- normalizePath(file.path(outdir, basename(.file)))
+    # ensure that the generated file does not overwrite the orginal script 
+    if( rscript == .file ){
+        i <- 1
+        while( file.exists(rscript <- sprintf("%s-%i.%s", file_path_sans_ext(.file), i, file_ext(.file))) ){
+            i <- i + 1
+        }
+    }
+        
     # copy script
-    self <- cli_self()
-    file.copy(self, outdir)
-    rscript <- file.path(outdir, basename(self))
+    file.copy(.file, rscript, overwrite = TRUE)
     l <- readLines(rscript)
-    cat(l[-seq(1L, grep("^quit\\(\\)", l)[1L])], file = rscript, sep = "\n")
+    if( !length(ih <- grep("#/header", l, fixed = TRUE) ) ){
+        ih <- grep("^quit\\(\\)", l)
+    }
+    if( length(ih) ) l <- l[-seq(1L, ih[1L])]
+    cat(l, file = rscript, sep = "\n")
     
     owd <- setwd(outdir)
     on.exit(setwd(owd))
