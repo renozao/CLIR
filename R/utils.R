@@ -166,23 +166,29 @@ cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
         }
     }
         
-    # copy script
+    ## SETUP SCRIPT
+    # copy to output dir
     file.copy(.file, rscript, overwrite = TRUE)
+    # remove header section
     l <- readLines(rscript)
     if( !length(ih <- grep("#/header", l, fixed = TRUE) ) ){
         ih <- grep("^quit\\(\\)", l)
     }
     if( length(ih) ) l <- l[-seq(1L, ih[1L])]
     cat(l, file = rscript, sep = "\n")
+    #
     
+    ## RUN
+    # change to output dir
     owd <- setwd(outdir)
     on.exit(setwd(owd))
-    
     # write config file
     write.yaml(list(...), file = .config)
-    
+    # run
     library(knitr)
     spin(basename(rscript))
+    #
+    
 }
 
 
