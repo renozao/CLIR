@@ -87,14 +87,18 @@ write.yaml <- function(x, file, append = FALSE, ..., .metaheader = TRUE){
     if( !isFALSE(.metaheader) ){
         
         if( isTRUE(.metaheader) ){ # build metaheader
-            meta <- c(Date = date(), SHA = digest(list(date(), list(x, ...))))
-            .metaheader <- c(sprintf("%s: %s", names(meta), meta), sprintf("CLIR: %s", packageVersion('CLIR')))
+            .metaheader <- cli_metaheader(x, ...)
        }
        cat(paste0("# ", .metaheader), file = file, append = append, sep = "\n")
        append <- TRUE
     }
     
     write(as.yaml(x, ...), file = file, append = append)
+}
+
+cli_metaheader <- function(...){
+    meta <- c(Date = date(), SHA = digest(list(...)))
+    c(sprintf("%s: %s", names(meta), meta), sprintf("CLIR: %s", packageVersion('CLIR')))
 }
 
 #' @inheritParams yaml::yaml.load_file
@@ -116,9 +120,10 @@ read.yaml <- yaml.load_file
 #' @export
 cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE){
     
+    # return all cli arguments if missing(x)
+    if( missing(x) ) return( commandArgs(trailing.only) )
     # return running script if NULL
     if( is.null(x) ) return( cli_self(TRUE) )
-    if( missing(x) ) return( commandArgs(trailing.only) )
     
     res <- default
     args <- commandArgs(trailing.only)
@@ -149,7 +154,7 @@ cli_self <- function(full = TRUE){
 
 #' @importFrom tools file_path_sans_ext file_ext
 #' @export 
-cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
+cli_spin <- function(outdir, ..., .file = cli_self(), .config = NULL, .log = NULL){
     
     # setup run directory
     if( file.exists(outdir) ){
@@ -175,6 +180,26 @@ cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
         ih <- grep("^quit\\(\\)", l)
     }
     if( length(ih) ) l <- l[-seq(1L, ih[1L])]
+    
+    # determine config file path
+    if( is.null(.config) ){
+        .config <- 'config.yml'
+        i <- 1L
+        while( file.exists(.config) ){
+            .config <- sprintf('config-%i.yml', i)
+            i <- i + 1L
+        }
+    }
+    
+    # append initialisation code
+    l <- c(sprintf("# /** %s
+# Parent: %s 
+# */
+#+ cli_config, include = FALSE
+.CONFIGFILE <- \"%s\"
+e <- environment()
+list2env(.CONFIG <- CLIR::read.yaml(.CONFIGFILE), envir = e)
+", paste0("# ", cli_metaheader(l), collapse = "\n"), .file, .config),l)
     cat(l, file = rscript, sep = "\n")
     #
     
@@ -182,13 +207,17 @@ cli_spin <- function(outdir, ..., .file = cli_self(), .config = 'config.yml'){
     # change to output dir
     owd <- setwd(outdir)
     on.exit(setwd(owd))
-    # write config file
-    write.yaml(list(...), file = .config)
-    # run
-    library(knitr)
-    spin(basename(rscript))
-    #
     
+    # write config file
+    config_param <- list(...)
+    write.yaml(config_param, file = .config)
+    
+    # run
+    out <- system(sprintf('%sRscript -e "knitr::spin(\'%s\')"', file.path(R.home(), 'bin', ''), basename(rscript)), intern = !is.null(.log))
+    if( !is.null(.log) )
+        cat(out, file = .log, sep = "\n")
+    #
+    invisible(out)
 }
 
 
