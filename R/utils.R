@@ -154,13 +154,13 @@ cli_self <- function(full = TRUE){
 
 #' @importFrom tools file_path_sans_ext file_ext
 #' @export 
-cli_spin <- function(outdir, ..., .file = cli_self(), .config = NULL, .log = NULL){
+cli_spin <- function(outdir, ..., .file = cli_self(), .config = NULL, .log = NULL, .clean = TRUE){
     
     # setup run directory
     if( file.exists(outdir) ){
-        unlink(outdir, recursive = TRUE)
-    }
-    dir.create(outdir, recursive = TRUE)
+        if( .clean ) unlink(outdir, recursive = TRUE)
+    }else dir.create(outdir, recursive = TRUE)
+    
     .file <- normalizePath(.file, mustWork = TRUE)
     rscript <- normalizePath(file.path(outdir, basename(.file)), mustWork = FALSE)
     # ensure that the generated file does not overwrite the orginal script 
