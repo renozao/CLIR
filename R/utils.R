@@ -4,6 +4,8 @@
 # Created: Nov 20, 2013
 ###############################################################################
 
+'%||%' <- function(a, b) if( is.null(a) ) b else a
+
 is_source_package <- function(path){
     !file.exists(file.path(path, 'Meta'))
 }
@@ -101,6 +103,33 @@ cli_metaheader <- function(...){
     c(sprintf("%s: %s", names(meta), meta), sprintf("CLIR: %s", packageVersion('CLIR')))
 }
 
+#' @export
+cli_startup <- function(){
+    
+    message("* Script: ", cli_self())
+    message("* Running in: ", getwd())
+    message("* Using ", R.version.string)
+    suppressMessages(library(pkgmaker))
+    message("* Using ", str_pkg('pkgmaker'))
+    message("* Using ", str_pkg('CLIR'))
+    
+}
+
+#' @export
+cli_init <- function(load = TRUE){
+    
+    qlibrary('CLIR')
+    cli_startup()
+    # TODO: extract parameters from running script
+    ARGS <- list()
+    # load arguments in calling environment
+    if( load ){
+        e <- parent.frame()
+        list2env(ARGS, e)
+    }
+    invisible(ARGS)
+}
+
 #' @inheritParams yaml::yaml.load_file
 #' @export
 #' @rdname yaml
@@ -118,7 +147,7 @@ read.yaml <- yaml.load_file
 #' in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.  
 #' 
 #' @export
-cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE){
+cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE, as.is = TRUE){
     
     # return all cli arguments if missing(x)
     if( missing(x) ) return( commandArgs(trailing.only) )
@@ -133,11 +162,14 @@ cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.on
         else if( required ) stop("Missing required argument ", x, ".", call. = FALSE)
         
     }else{
+        if( !as.is ) x <- paste0("--", gsub(".", "-", x, fixed = TRUE))
         if( !length(i <- which(args == x)) && !is.null(alt)){
+            if( !as.is ) alt <- paste0("-", alt)
             i <- which(args == alt)
         }
         if( length(i) ){
-            res <- if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
+            res <- if( is.logical(default) ) !default
+                    else if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
                     else TRUE
             
         }else if( required ) stop("Argument '", x, "' is required.", call. = FALSE)
@@ -146,6 +178,16 @@ cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.on
     # return value
     res
 }
+
+#' @export 
+cli_arg0 <- function(x, ..., envir = parent.frame()){
+    val <- cli_arg(x, ..., as.is = FALSE)
+    message("* Parameters ", x, ": ", val)
+    if( isString(x) && !is_NA(envir) ){
+        assign(x, val, envir = envir)
+        invisible(val)
+    }else val
+}  
 
 #' @export
 cli_self <- function(full = TRUE){
@@ -213,7 +255,13 @@ list2env(.CONFIG <- CLIR::read.yaml(.CONFIGFILE), envir = e)
     write.yaml(config_param, file = .config)
     
     # run
-    out <- system(sprintf('%sRscript -e "knitr::spin(\'%s\')"', file.path(R.home(), 'bin', ''), basename(rscript)), intern = !is.null(.log))
+    internal <- !is.null(.log) 
+    out <- system(sprintf('%sRscript -e "knitr::spin(\'%s\')"', file.path(R.home(), 'bin', ''), basename(rscript)), intern = internal)
+    status <- attr(out, 'status')
+    if( (internal && status) || out ){
+        msg <- if( internal ) out else ''
+        stop(sprintf("Error while running spinning script '%s'.\n  %s", rscript, msg))
+    }
     if( !is.null(.log) )
         cat(out, file = .log, sep = "\n")
     #

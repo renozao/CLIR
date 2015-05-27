@@ -323,3 +323,73 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     
 }
 
+# Pure R S3 parser: based on roxygen-like headers
+
+#' @export
+cli_parse <- function(x, ...){
+    UseMethod('cli_parse')
+}
+
+#' @importFrom roxygen2 roc_proc_text rd_roclet  
+cli_parse.default <- function(x, ..., print = TRUE){
+    
+    roc <- rd_roclet()
+    li <- readLines(x)
+    li <- paste0(c(grep("^#' +", li, value = TRUE)
+                    , paste0("#' @name ", basename(x))
+                    , 'NULL'), collapse = "\n")
+    rd <- roc_proc_text(roc, li)[[1]]
+    
+    # process parameter names
+    params <- rd[[1]]$param$values
+    names(params) <- paste0('--', names(params))
+    param_spec <- sapply(strsplit(params, "\n"), head, 1L)
+    param_spec <- mapply(process_param, names(params), param_spec, SIMPLIFY = FALSE)
+    abv <- sapply(param_spec, '[[', 'short')
+    print(abv)
+    names(params) <- paste0(ifelse(nzchar(abv), sprintf("%s, ", abv), ''), '@@@', names(params))
+    rd[[1]]$param$values <- params
+    
+    tmp <- tempfile()
+    on.exit( unlink(tmp) )
+    cat(format(rd))
+    cat(format(rd), file = tmp)
+    Rd <- parse_Rd(tmp)
+    res <- paste0(capture.output(Rd2txt(Rd)), collapse = "\n")
+    res <- gsub('@@@', '-', res, fixed = TRUE)
+    if( print ) cat(res)
+    invisible(res)
+}
+
+
+process_param <- function(p, raw){
+    # define specs
+    spec_list <- list(long = p, short = '')
+    # extract special arguments from help string
+    abv_pattern <- "^ *%\\+ +(.*)$"
+    if( grepl(abv_pattern, raw) ){
+        spec_txt <- gsub(abv_pattern, "\\1", raw)
+        specs <- try(eval(parse(text = sprintf("list(%s)", spec_txt))), silent = TRUE)
+        if( is(specs, 'try-error') ){
+            warning(sprintf("Dropped invalid parameter specification: %s", spec_txt))
+        }
+        
+        # assign/infer specs names
+        if( is.null(names(specs)) ) names(specs) <- rep('', length(specs))
+        if( length(i <- which(names(specs) == '')) ){
+            lapply(i, function(i){
+                val <- specs[[i]]
+                nam <- if( grepl("^-", val) ) 'short' 
+                        else if( !'default' %in% names(specs) ) 'default'
+                if( !is.null(nam) ){
+                    spec_list[[nam]] <<- val
+                }
+            })
+        }
+        spec_list <- c(spec_list, specs[names(specs) != ''])
+    }
+    
+    spec_list$required <- is.null(spec_list$default)
+    spec_list
+}
+
