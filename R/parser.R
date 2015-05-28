@@ -330,8 +330,11 @@ cli_parse <- function(x, ...){
     UseMethod('cli_parse')
 }
 
+
+.DASH <- '.__.'
+
 #' @importFrom roxygen2 roc_proc_text rd_roclet  
-cli_parse.default <- function(x, ..., print = TRUE){
+cli_parse.default <- function(x, args = commandArgs(TRUE), ...){
     
     roc <- rd_roclet()
     li <- readLines(x)
@@ -342,36 +345,65 @@ cli_parse.default <- function(x, ..., print = TRUE){
     
     # process parameter names
     params <- rd[[1]]$param$values
-    names(params) <- paste0('--', names(params))
     param_spec <- sapply(strsplit(params, "\n"), head, 1L)
     param_spec <- mapply(process_param, names(params), param_spec, SIMPLIFY = FALSE)
-    abv <- sapply(param_spec, '[[', 'short')
-    print(abv)
-    names(params) <- paste0(ifelse(nzchar(abv), sprintf("%s, ", abv), ''), '@@@', names(params))
-    rd[[1]]$param$values <- params
+    names(param_spec) <- sapply(param_spec, '[[', 'name')
     
+    # edit Rd doc for short alternative arguments
+    alt <- sapply(param_spec, '[[', 'alt')
+    param_rd_names <- paste0('  ', ifelse(!is.na(alt), sprintf("%s%s, ", .DASH, alt), ''), .DASH, .DASH, names(param_spec))
+    rd[[1]]$param$values <- setNames(params, param_rd_names)
+    
+    # append help command
+    if( is.null(param_spec$help) )
+        param_spec$help <- process_param('help,h', "%+ FALSE")
+    # append quiet command
+    if( is.null(param_spec$quiet) )
+        param_spec$quiet <- process_param('quiet,q', "%+ FALSE")
+    
+    # get command line arguments
+    ARGS_FULL <- sapply(names(param_spec), function(p){
+        do.call(cli_arg, c(param_spec[[p]], list(args = args, as.is = FALSE, with.details = TRUE)))
+    }, simplify = FALSE)
+    ARGS <- sapply(ARGS_FULL, '[[', 'value', simplify = FALSE)
+    
+    # return structure
+    invisible(structure(list(rd = rd, params = param_spec, args = ARGS, args_full = ARGS_FULL), class = 'cli'))
+}
+
+cli_help <- function(x, pager = x$args_full$help$match == 'h'){
+    
+    rd <- x$rd
     tmp <- tempfile()
     on.exit( unlink(tmp) )
-    cat(format(rd))
     cat(format(rd), file = tmp)
     Rd <- parse_Rd(tmp)
     res <- paste0(capture.output(Rd2txt(Rd)), collapse = "\n")
-    res <- gsub('@@@', '-', res, fixed = TRUE)
-    if( print ) cat(res)
-    invisible(res)
+    res <- gsub('.__.', '-', res, fixed = TRUE)
+    
+    if( pager ){
+        tmp_txt <- tempfile()
+        cat(res, file = tmp_txt)
+        file.show(tmp_txt, delete.file = TRUE)
+    }else cat(res)
 }
 
 
 process_param <- function(p, raw){
     # define specs
-    spec_list <- list(long = p, short = '')
+    p <- strsplit(p, ",")[[1]]
+    spec_list <- list(name = p[1], alt = p[2])
     # extract special arguments from help string
-    abv_pattern <- "^ *%\\+ +(.*)$"
+    abv_pattern <- "^ *%[+!] *(.*)$"
     if( grepl(abv_pattern, raw) ){
         spec_txt <- gsub(abv_pattern, "\\1", raw)
-        specs <- try(eval(parse(text = sprintf("list(%s)", spec_txt))), silent = TRUE)
+        specs <- try(eval(parse(text = sprintf("list(%s)", spec_txt))
+                                , list(INT = integer(), NUM = numeric()
+                                       , CHAR = character(), BOOL = logical()
+                                )
+                     ), silent = TRUE)
         if( is(specs, 'try-error') ){
-            warning(sprintf("Dropped invalid parameter specification: %s", spec_txt))
+            warning(sprintf("Dropped invalid parameter specification: %s [%s]", spec_txt, specs))
         }
         
         # assign/infer specs names
@@ -379,8 +411,8 @@ process_param <- function(p, raw){
         if( length(i <- which(names(specs) == '')) ){
             lapply(i, function(i){
                 val <- specs[[i]]
-                nam <- if( grepl("^-", val) ) 'short' 
-                        else if( !'default' %in% names(specs) ) 'default'
+                # default value
+                nam <- if( !'default' %in% names(spec_list) ) 'default'
                 if( !is.null(nam) ){
                     spec_list[[nam]] <<- val
                 }
@@ -389,7 +421,7 @@ process_param <- function(p, raw){
         spec_list <- c(spec_list, specs[names(specs) != ''])
     }
     
-    spec_list$required <- is.null(spec_list$default)
+    spec_list$required <- is.null(spec_list$default) || grepl("^ *%! ", raw)
     spec_list
 }
 

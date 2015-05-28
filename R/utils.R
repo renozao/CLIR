@@ -104,28 +104,50 @@ cli_metaheader <- function(...){
 }
 
 #' @export
-cli_startup <- function(){
+cli_startup <- function(verbose = TRUE){
     
-    message("* Script: ", cli_self())
-    message("* Running in: ", getwd())
-    message("* Using ", R.version.string)
+    script <- cli_self()
     suppressMessages(library(pkgmaker))
-    message("* Using ", str_pkg('pkgmaker'))
-    message("* Using ", str_pkg('CLIR'))
+    if( verbose ){
+        message("* Script: ", script)
+        message("* Running in: ", getwd())
+        message("* Using ", R.version.string)
+        message("* Using ", str_pkg('pkgmaker'))
+        message("* Using ", str_pkg('CLIR'))
+    }
     
+    invisible(script)
 }
 
 #' @export
-cli_init <- function(load = TRUE){
+cli_init <- function(verbose = 2, load = TRUE, envir = parent.frame()){
     
     qlibrary('CLIR')
-    cli_startup()
-    # TODO: extract parameters from running script
-    ARGS <- list()
+    script <- cli_self()
+    # extract parameters from running script
+    spec <- cli_parse(script)
+    ARGS <- spec$args
+    
+    # force quiet if argument passed
+    if( ARGS$quiet && is.finite(verbose) ) verbose <- FALSE
+     
+    if( !is.null(ARGS$help) && ARGS$help ){
+        cli_help(spec)
+        quit()
+    }
+    
+    cli_startup( verbose )
     # load arguments in calling environment
     if( load ){
-        e <- parent.frame()
-        list2env(ARGS, e)
+        list2env(ARGS, envir)
+    }
+    if( verbose > 1 ){
+        # show parameters (5 per line) 
+        message('* Parameters:')
+        ARGS_l <- split(ARGS, cut(seq_along(ARGS), ceiling(length(ARGS) / 4)))
+        lapply(ARGS_l, function(x){
+            message("  | ", str_out(x, Inf, use.names = TRUE))
+        })    
     }
     invisible(ARGS)
 }
@@ -139,7 +161,7 @@ read.yaml <- yaml.load_file
 
 #' Extracting Command Line Arguments
 #' 
-#' @param x parameter name, e.g., \code{'-f'}
+#' @param name parameter name, e.g., \code{'-f'}
 #' @param default default value to return if parameter is missing
 #' @param alt alternative parameter name, e.g. long form code{'--file'} 
 #' @param required logical that indicates if the parameter is required.
@@ -147,44 +169,66 @@ read.yaml <- yaml.load_file
 #' in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.  
 #' 
 #' @export
-cli_arg <- function(x, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE, as.is = TRUE){
+cli_arg <- function(name, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE
+                    , as.is = TRUE, args = commandArgs(trailing.only), with.details = FALSE){
     
     # return all cli arguments if missing(x)
-    if( missing(x) ) return( commandArgs(trailing.only) )
+    if( missing(name) ) return( args )
+    
+    x <- name
     # return running script if NULL
     if( is.null(x) ) return( cli_self(TRUE) )
     
     res <- default
-    args <- commandArgs(trailing.only)
+    attrib <- list(match = '', cmd = '')
     if( is.numeric(x) ){ # positional argument
         pargs <- grep("^-", args, invert = TRUE, value = TRUE)
         if( length(pargs) >= x ) res <- pargs[x]
         else if( required ) stop("Missing required argument ", x, ".", call. = FALSE)
         
     }else{
-        if( !as.is ) x <- paste0("--", gsub(".", "-", x, fixed = TRUE))
-        if( !length(i <- which(args == x)) && !is.null(alt)){
-            if( !as.is ) alt <- paste0("-", alt)
-            i <- which(args == alt)
+        lookup <- x0 <- x
+        if( !as.is ){
+            lookup <- paste0("--", gsub(".", "-", lookup, fixed = TRUE))
         }
+        if( !length(i <- which(args == lookup)) && !is.na(alt)){
+            x0 <- alt
+            if( !as.is ) alt <- paste0("-", alt)
+            lookup <- alt
+        }
+        
+        i <- which(args == lookup)
         if( length(i) ){
+            attrib$match <- x0
+            attrib$cmd <- lookup
             res <- if( is.logical(default) ) !default
                     else if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
                     else TRUE
             
         }else if( required ) stop("Argument '", x, "' is required.", call. = FALSE)
+        
+    }
+    
+    attrib$raw <- res
+    # convert to correct type
+    if( !is.null(default) && is.character(res) && !is(res, class(default)) ){
+        res <- eval(parse(text = res))
     }
     
     # return value
-    res
+    if( with.details ){
+        attrib$value <- res
+        attrib 
+    }else res
 }
 
 #' @export 
-cli_arg0 <- function(x, ..., envir = parent.frame()){
+cli_arg0 <- function(name, ..., envir = parent.frame()){
+    x <- name
     val <- cli_arg(x, ..., as.is = FALSE)
     message("* Parameters ", x, ": ", val)
-    if( isString(x) && !is_NA(envir) ){
-        assign(x, val, envir = envir)
+    if( is.character(x) && !is.null(envir) ){
+        envir[[x]] <- val
         invisible(val)
     }else val
 }  
