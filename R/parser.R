@@ -334,7 +334,7 @@ cli_parse <- function(x, ...){
 .DASH <- '.__.'
 
 #' @importFrom roxygen2 roc_proc_text rd_roclet  
-cli_parse.default <- function(x, args = commandArgs(TRUE), ...){
+cli_parse.default <- function(x, args = commandArgs(TRUE), ..., error = TRUE){
     
     roc <- rd_roclet()
     li <- readLines(x)
@@ -352,6 +352,15 @@ cli_parse.default <- function(x, args = commandArgs(TRUE), ...){
     # edit Rd doc for short alternative arguments
     alt <- sapply(param_spec, '[[', 'alt')
     param_rd_names <- paste0('  ', ifelse(!is.na(alt), sprintf("%s%s, ", .DASH, alt), ''), .DASH, .DASH, names(param_spec))
+    # add default values to param description
+    params <- sapply(seq_along(params), function(i){
+                p <- params[[i]]
+                if( !is.null(d <- param_spec[[i]]$default) ) 
+                    p <- paste0(p, sprintf("\n[default: %s]", d))
+                else p <- paste0(p, '\n[required]') 
+                p
+            })
+    # update rd object
     rd[[1]]$param$values <- setNames(params, param_rd_names)
     
     # append help command
@@ -363,7 +372,7 @@ cli_parse.default <- function(x, args = commandArgs(TRUE), ...){
     
     # get command line arguments
     ARGS_FULL <- sapply(names(param_spec), function(p){
-        do.call(cli_arg, c(param_spec[[p]], list(args = args, as.is = FALSE, with.details = TRUE)))
+        do.call(cli_arg, c(param_spec[[p]], list(args = args, as.is = FALSE, with.details = TRUE, error = error)))
     }, simplify = FALSE)
     ARGS <- sapply(ARGS_FULL, '[[', 'value', simplify = FALSE)
     
@@ -371,7 +380,7 @@ cli_parse.default <- function(x, args = commandArgs(TRUE), ...){
     invisible(structure(list(rd = rd, params = param_spec, args = ARGS, args_full = ARGS_FULL), class = 'cli'))
 }
 
-cli_help <- function(x, pager = x$args_full$help$match == 'h'){
+cli_help <- function(x, pager = x$args_full$help$match == 'h', appendLF = !pager){
     
     rd <- x$rd
     tmp <- tempfile()
@@ -381,6 +390,8 @@ cli_help <- function(x, pager = x$args_full$help$match == 'h'){
     res <- paste0(capture.output(Rd2txt(Rd)), collapse = "\n")
     res <- gsub('.__.', '-', res, fixed = TRUE)
     
+    if( appendLF ) res <- paste0(res, "\n")
+        
     if( pager ){
         tmp_txt <- tempfile()
         cat(res, file = tmp_txt)
@@ -414,6 +425,7 @@ process_param <- function(p, raw){
                 # default value
                 nam <- if( !'default' %in% names(spec_list) ) 'default'
                 if( !is.null(nam) ){
+                    if( is.null(val) ) val <- 'NULL'
                     spec_list[[nam]] <<- val
                 }
             })

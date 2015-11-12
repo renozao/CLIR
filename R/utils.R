@@ -124,8 +124,8 @@ cli_init <- function(verbose = 2, load = TRUE, envir = parent.frame()){
     
     qlibrary('CLIR')
     script <- cli_self()
-    # extract parameters from running script
-    spec <- cli_parse(script)
+    # extract parameter specifications from running script
+    spec <- cli_parse(script, error = FALSE)
     ARGS <- spec$args
     
     # force quiet if argument passed
@@ -137,6 +137,11 @@ cli_init <- function(verbose = 2, load = TRUE, envir = parent.frame()){
     }
     
     cli_startup( verbose )
+    
+    # re-parse parameters specifications
+    spec <- cli_parse(script, error = TRUE)
+    ARGS <- spec$args
+    
     # load arguments in calling environment
     if( load ){
         list2env(ARGS, envir)
@@ -166,11 +171,18 @@ read.yaml <- yaml.load_file
 #' @param alt alternative parameter name, e.g. long form code{'--file'} 
 #' @param required logical that indicates if the parameter is required.
 #' @param trailing.only logical that indicates if the parameter should be looked
-#' in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.  
+#' in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.
+#' @param as.is logical that indicates if the name should be looked up as is in the 
+#' command line argument or with a double/single dash prefix.
+#' @param args vector of command line argument to parse
+#' @param with.details logical that indicates if details about the argument match should be returned. 
+#' @param error logical that indicates if an error should be raised when the command line arguments 
+#' do not meet the constrains, e.g., required. 
+#' 
 #' 
 #' @export
-cli_arg <- function(name, default = NULL, alt = NULL, required = FALSE, trailing.only = TRUE
-                    , as.is = TRUE, args = commandArgs(trailing.only), with.details = FALSE){
+cli_arg <- function(name, default = NULL, alt = NA, required = FALSE, trailing.only = TRUE
+                    , as.is = TRUE, args = commandArgs(trailing.only), with.details = FALSE, error = TRUE){
     
     # return all cli arguments if missing(x)
     if( missing(name) ) return( args )
@@ -181,10 +193,10 @@ cli_arg <- function(name, default = NULL, alt = NULL, required = FALSE, trailing
     
     res <- default
     attrib <- list(match = '', cmd = '')
-    if( is.numeric(x) ){ # positional argument
+    if( is.numeric(x) ){ # positional argument (neither working, nor really implemented)
         pargs <- grep("^-", args, invert = TRUE, value = TRUE)
         if( length(pargs) >= x ) res <- pargs[x]
-        else if( required ) stop("Missing required argument ", x, ".", call. = FALSE)
+        else if( required && error ) stop("Missing required argument ", x, ".", call. = FALSE)
         
     }else{
         lookup <- x0 <- x
@@ -205,7 +217,7 @@ cli_arg <- function(name, default = NULL, alt = NULL, required = FALSE, trailing
                     else if( length(args) > i && !grepl("^-", args[i+1L]) ) args[i+1L]
                     else TRUE
             
-        }else if( required ) stop("Argument '", x, "' is required.", call. = FALSE)
+        }else if( required && error ) stop("Argument '", x, "' is required.", call. = FALSE)
         
     }
     
