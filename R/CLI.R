@@ -300,3 +300,33 @@ makeCLIfunction <- function(entry, path){
         invisible(do.call(entry, ARGS))
     }
 }
+
+
+#' Extract Docopt String from R Markdown YAML Header
+#' 
+#' @param file rmarkdown file
+#' 
+#' @return string
+#' 
+#' @export
+yaml.docopt <- function(file){
+  
+  .collapse <- function(...) paste0(..., collapse = "\n")
+  yml <- gsub("^#' ", "", readLines(file))
+  i_yml <- grep("^---", yml)
+  if( length(i_yml) < 2 ) stop("Invalid YAML header: must be enclosed between '---' lines.")
+  yml <- yml[seq(i_yml[1L]+1L, i_yml[2L]-1L)]
+  yml_header <- yaml.load(.collapse(yml))
+  
+# find out where the docopt string is in the yaml header
+  i_docopt <- which(names(yml_header) == 'docopt')
+  if( i_docopt == length(yml_header) ){
+    lines_docopt <- seq(grep('^docopt\\s*:', yml)[1L], length(yml))
+    
+  }else lines_docopt <- seq(seq(grep('^docopt\\s*:', yml)[1L], grep(sprintf('^%s\\s*:', names(yaml_header)[i_docopt+1L]), yml)[1L]))
+  
+  docopt_lines <- yml[lines_docopt]
+  docopt_lines[1L] <- gsub("^docopt\\s*:\\s*[\"']", '', docopt_lines[1L])
+  .collapse(docopt_lines)
+  
+}
