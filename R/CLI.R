@@ -327,7 +327,7 @@ yaml.docopt <- function(file){
   
   docopt_lines <- yml[lines_docopt]
   docopt_lines[1L] <- gsub("^docopt\\s*:\\s*[\"']", '', docopt_lines[1L])
-  doc < .collapse(docopt_lines)
+  doc <- .collapse(docopt_lines)
   
   # attach parsed yaml header
   attr(doc, 'yaml') <- yml_header
