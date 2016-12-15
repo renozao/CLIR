@@ -323,7 +323,7 @@ yaml.docopt <- function(file){
   if( i_docopt == length(yml_header) ){
     lines_docopt <- seq(grep('^docopt\\s*:', yml)[1L], length(yml))
     
-  }else lines_docopt <- seq(seq(grep('^docopt\\s*:', yml)[1L], grep(sprintf('^%s\\s*:', names(yaml_header)[i_docopt+1L]), yml)[1L]))
+  }else lines_docopt <- seq(seq(grep('^docopt\\s*:', yml)[1L], grep(sprintf('^%s\\s*:', names(yml_header)[i_docopt+1L]), yml)[1L]))
   
   docopt_lines <- yml[lines_docopt]
   docopt_lines[1L] <- gsub("^docopt\\s*:\\s*[\"']", '', docopt_lines[1L])
