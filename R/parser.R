@@ -95,6 +95,8 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
             u <- sub(.$prog, paste(.$prog, "<command>"), u, fixed = TRUE)
             if( hint ) u <- paste0(u, "\n  Use --help for listing all available commands\n")
         }
+        u <- paste0(u, "\n")
+        
         if( print ) cat(u)
         invisible(u)
     }
