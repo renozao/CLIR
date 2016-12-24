@@ -1,14 +1,31 @@
-# Project: RCLI
+# Project: CLIR
 # Log messages and error utils
 #
 # Author: Renaud Gaujoux
 # Created: Nov 21, 2013
 ###############################################################################
 
+#' CLI Logging Features
+#' 
+#' The function \code{cli_*} wrap calls to the corresponding 
+#' base functions, to allow automatic formating and redirection. 
+#' 
+#' @param ... arguments passed to the corresponding base function.
+#' 
+#' @rdname CLI-logging
+#' @export
 cli_stop <- function(...) stop(..., call. = FALSE)
+
+#' @rdname CLI-logging
+#' @export
 cli_warning <- function(...) warning(..., call. = FALSE)
 
-cli_message <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
+#' @param indent number of indent spaces
+#' @param item itemize character to use, e.g., \code{'*'} or \code{'-'}.
+#' @inheritParams base::message
+#' @rdname CLI-logging
+#' @export
+cli_smessage <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
     if( is.null(item) ){ # choose item from indent
         .item <- c('*', '*', '-', '-', '>', '>') 
         item <- .item[indent+1]
@@ -18,6 +35,10 @@ cli_message <- function(..., indent = 0L, item = NULL, appendLF = FALSE){
     message(indent, item, ..., appendLF = appendLF)
 }
 
+#' @param extfile external log file where to save log messages.
+#' Note that messages are still shown in \emph{stderr}.
+#' @rdname CLI-logging
+#' @export
 cli_log <- function(..., appendLF = TRUE, extfile = NULL){
     
     # output to external file as well
@@ -28,8 +49,11 @@ cli_log <- function(..., appendLF = TRUE, extfile = NULL){
     
 }
 
-cli_smessage <- function(..., item = '', appendLF = TRUE){
-    cli_message(..., item = item, appendLF = appendLF)
+
+#' @rdname CLI-logging
+#' @export
+cli_message <- function(..., item = '', appendLF = TRUE){
+    cli_smessage(..., item = item, appendLF = appendLF)
 }
 
 tryCatchWarning <- local({

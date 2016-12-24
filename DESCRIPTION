@@ -1,22 +1,28 @@
-Package: RCLI
+Package: CLIR
 Type: Package
 Title: Command Line Interface for R Packages
-Version: 1.0
+Version: 1.1.8
 Date: 2013-11-01
 Author: Renaud Gaujoux
 Maintainer: Renaud Gaujoux <renaud@tx.technion.ac.il>
 Description: More about what it does (maybe more than one line)
-License: GPL >= 2
+License: GPL (>=2)
 Depends:
-	methods
+    methods,
+    yaml
 Imports:
     tools,
-    argparse
+    argparse,
+    proto,
+    digest,
+    roxygen2
 Suggests:
     devtools
 Collate:
     'utils.R'
     'CLI.R'
-    'parser.R'
-    'rd.R'
     'logging.R'
+    'parser.R'
+    'qsub.R'
+    'rd.R'
+RoxygenNote: 5.0.1.9000
