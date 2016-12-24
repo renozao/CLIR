@@ -283,7 +283,12 @@ makeCLIfunction <- function(entry, path){
     
     # load function
     pkg <- load_package(path)
-    entry <- getFunction(entry, where = asNamespace(pkg))
+    entry_str <- entry
+    entry <- getFunction(entry, where = asNamespace(pkg), mustFind = FALSE)
+    if( is.null(entry) ){
+      cli_stop(sprintf("Could not find entrypoint '%s' in package %s.\n       Try checking/updating its man pages."
+                  , entry_str, basename(path)))
+    }
     
     # wrap into special CLI environment 
     cli_env <- new.env(parent = environment(entry))
