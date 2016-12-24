@@ -31,8 +31,9 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     description_ph <- '__@@DESCRIPTION@@__'
     command_ph <- '__@@COMMANDS@@__'
     epilog_ph <- '__@@EPILOG@@__'
-    p <- ArgumentParser(prog = prog, description = description_ph, ...
-                        , epilog = paste0(command_ph, epilog_ph))
+    p <- ArgumentParser(prog = prog
+                        , description = paste0(description_ph, '__@@COMMANDS@@__'), ...
+                        , epilog = epilog_ph)
     p$description_str <- description
     p$epilog_str <- epilog
     
@@ -61,9 +62,9 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     # add a (sub-)command
     p$add_command <- function(., command, fun, parser = NULL, help='', ..., default = FALSE){
         # add command argument if necessary
-        if( !length(.$command) ){
-            .$.super$add_argument('command', help = paste0(.$prog, ' command to run'))
-        }
+#        if( !length(.$command) ){
+#            .$.super$add_argument('command', help = paste0(.$prog, ' command to run'))
+#        }
         # store command
         .$command[[command]] <- list(fun = fun, parser = parser, help = help)	
         # store command as default
@@ -87,11 +88,15 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
     }
     
     # overload print_usage
-    p$print_usage <- function(.){
-        .$.super$print_usage()
-        if( length(.$command) ){
-            cat("\n  Use --help for listing all available commands\n")
+    p$print_usage <- function(., print = TRUE, super = FALSE, hint = TRUE){
+        u <- paste(capture.output(.$.super$print_usage()), collapse="\n")
+        # add 'command' argument here (otherwise it shows as single "positional argument")
+        if( length(.$command) && !super){
+            u <- sub(.$prog, paste(.$prog, "<command>"), u, fixed = TRUE)
+            if( hint ) u <- paste0(u, "\n  Use --help for listing all available commands\n")
         }
+        if( print ) cat(u)
+        invisible(u)
     }
     #
     
@@ -137,6 +142,10 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
         
         cmds <- ''
         if( length(.$command) ){
+            # modify usage string
+            h <- sub(.$print_usage(print = FALSE, super = TRUE)
+                    , .$print_usage(print = FALSE, hint = FALSE)
+                    , h, fixed = TRUE)
             # format command help
             lm <- max(nchar(names(.$command)))
             fmt <- paste0("  %-", lm, "s")
