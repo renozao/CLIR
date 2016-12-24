@@ -43,7 +43,7 @@ sstr <- function(x, collapse = "\n"){
     if( verbose ) f
     else{
         function(...){
-            capture.output(suppressPackageStartupMessages(suppressMessages(res <- f(...)))); 
+            capture.output(suppressWarnings(suppressPackageStartupMessages(suppressMessages(res <- f(...))))); 
             res
         }
     }
