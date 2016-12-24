@@ -213,7 +213,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
     }else if( !grepl("^-", ARGS[[1L]]) ){ # first argument is the command
         command <- ARGS[[1L]]
         if( !command %in% names(parser$command) ){
-            stop("unknown ", prog," command '", command, "'\n"
+            stop("Invalid command '", command, "' for ", prog, "\n"
                     , "  Available commands: ", paste0(names(parser$command), collapse = ', ') 
             #, paste(capture.output(parser$print_usage()), collapse = "\n")
                 , call. = FALSE
