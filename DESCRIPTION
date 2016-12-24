@@ -25,3 +25,4 @@ Collate:
     'parser.R'
     'qsub.R'
     'rd.R'
+RoxygenNote: 5.0.1.9000
