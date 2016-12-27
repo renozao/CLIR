@@ -325,4 +325,22 @@ list2env(.CONFIG <- CLIR::read.yaml(.CONFIGFILE), envir = e)
 }
 
 
+yaml_header <- function(file, section = NULL, simplify = TRUE){
+  
+  .collapse <- function(...) paste0(..., collapse = "\n")
+  yml <- gsub("^#' ", "", readLines(file))
+  i_yml <- grep("^---", yml)
+  if( length(i_yml) < 2 ) stop("Invalid YAML header: must be enclosed between '---' lines.")
+  yml <- yml[seq(i_yml[1L]+1L, i_yml[2L]-1L)]
+  # parse YAML
+  yml_header <- yaml.load(.collapse(yml))
+  
+  # find out where the docopt string is in the yaml header
+  if( !is.null(section) ){
+    yml_header <- yml_header[which(names(yml_header) %in% section)]
+    if( length(yml_header) == 1L && simplify ) yml_header <- yml_header[[1L]]
+  }
+  yml_header
+  
+}
 

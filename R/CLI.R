@@ -313,6 +313,7 @@ makeCLIfunction <- function(entry, path){
 #' 
 #' @return string
 #' 
+#' @importFrom yaml yaml.load
 #' @export
 yaml.docopt <- function(file){
   
@@ -323,16 +324,16 @@ yaml.docopt <- function(file){
   yml <- yml[seq(i_yml[1L]+1L, i_yml[2L]-1L)]
   yml_header <- yaml.load(.collapse(yml))
   
-# find out where the docopt string is in the yaml header
+  # find out where the docopt string is in the yaml header
   i_docopt <- which(names(yml_header) == 'docopt')
   if( i_docopt == length(yml_header) ){
     lines_docopt <- seq(grep('^docopt\\s*:', yml)[1L], length(yml))
-    
-  }else lines_docopt <- seq(seq(grep('^docopt\\s*:', yml)[1L], grep(sprintf('^%s\\s*:', names(yml_header)[i_docopt+1L]), yml)[1L]))
+  }else lines_docopt <- seq(grep('^docopt\\s*:', yml)[1L], grep(sprintf('^%s\\s*:', names(yml_header)[i_docopt+1L]), yml)[1L] - 1L)
   
   docopt_lines <- yml[lines_docopt]
   docopt_lines[1L] <- gsub("^docopt\\s*:\\s*[\"']", '', docopt_lines[1L])
   doc <- .collapse(docopt_lines)
+  doc <- gsub('["]\\s*$', "", doc)
   
   # attach parsed yaml header
   attr(doc, 'yaml') <- yml_header
