@@ -17,7 +17,8 @@ Imports:
     digest,
     roxygen2
 Suggests:
-    devtools
+    devtools,
+    rmarkdown
 Collate:
     'utils.R'
     'CLI.R'
@@ -25,4 +26,5 @@ Collate:
     'parser.R'
     'qsub.R'
     'rd.R'
+    'service.R'
 RoxygenNote: 5.0.1.9000
