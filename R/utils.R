@@ -4,6 +4,10 @@
 # Created: Nov 20, 2013
 ###############################################################################
 
+#' @import methods utils
+#' @importFrom stats setNames
+NULL
+
 '%||%' <- function(a, b) if( is.null(a) ) b else a
 
 is_source_package <- function(path){
@@ -14,8 +18,8 @@ load_package <- function(path){
     if( is_source_package(path) ){
         qlibrary('devtools', character.only = TRUE)
         qlibrary('methods', character.only = TRUE)
-        .silenceF(load_all)(path)
-        as.package(path)$package
+        .silenceF(devtools::load_all)(path)
+        devtools::as.package(path)$package
     }else{
         lib <- normalizePath(dirname(path))
         ol <- .libPaths()

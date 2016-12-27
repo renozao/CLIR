@@ -12,13 +12,15 @@ Depends:
     yaml
 Imports:
     tools,
+    utils,
     argparse,
     proto,
     digest,
     roxygen2
 Suggests:
     devtools,
-    rmarkdown
+    rmarkdown,
+    pkgmaker
 Collate:
     'utils.R'
     'CLI.R'
