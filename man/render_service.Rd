@@ -4,10 +4,14 @@
 \alias{render_service}
 \title{Renders Service Report File}
 \usage{
-render_service(service, ..., args = NULL, work_dir = ".", save = FALSE,
-  envir = parent.frame(), package = NULL)
+render_service(name, ..., args = NULL, work_dir = ".", save = FALSE,
+  envir = parent.frame(), package = topenv(parent.frame()))
 }
 \arguments{
+\item{name}{name of the service.
+It can be the name of the script that implements the service or the name of the directory
+that contains it.}
+
 \item{...}{report parameters checked against their specifications defined in the report YAML header file
 and passed down to \code{\link[rmarkdown]{render}}.}
 
@@ -16,10 +20,11 @@ If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignor
 
 \item{work_dir}{path to working directory}
 
+\item{save}{logical or character string that specify if or where the result list should be saved.}
+
 \item{envir}{environment where the report is rendered. See \code{\link[rmarkdown]{render}}.}
 
-\item{help}{logical that requests the service man page to be shown.
-If \code{TRUE}, the service is not run at all, and only show the man page before exiting.}
+\item{package}{name of the package where to look for the givne service.}
 }
 \description{
 Generates a service report.

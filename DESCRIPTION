@@ -1,7 +1,7 @@
 Package: CLIR
 Type: Package
 Title: Command Line Interface for R Packages
-Version: 1.1.8
+Version: 1.1.9
 Date: 2013-11-01
 Author: Renaud Gaujoux
 Maintainer: Renaud Gaujoux <renaud@tx.technion.ac.il>
@@ -13,14 +13,15 @@ Depends:
 Imports:
     tools,
     utils,
+    backports,
     argparse,
     proto,
     digest,
-    roxygen2
+    roxygen2,
+    pkgmaker
 Suggests:
     devtools,
-    rmarkdown,
-    pkgmaker
+    rmarkdown
 Collate:
     'utils.R'
     'CLI.R'
