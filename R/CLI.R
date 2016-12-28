@@ -124,7 +124,18 @@ CLI <- function(commands = NULL, default=NULL, ARGS = commandArgs(TRUE), ..., pa
     # run CLI
     .CLIargs(ARGS)
     on.exit( {.CLIargs(NULL); .CLIopts(NULL)} )
-    pkgCLI(ARGS, ...)
+    
+    res <- pkgCLI(ARGS, ...)
+    
+#    # save result
+    if( !is(res, 'proto') && !is.null(save_file <- .CLIopts()$cli_save) ){
+      # save result if requested
+      cli_message("* Saving result in file '", save_file, "'")
+      saveRDS(res, file = save_file)
+    }
+    
+    # return result invisibly
+    invisible(res)
 }
 
 file_lookup <- function(f, dirs){

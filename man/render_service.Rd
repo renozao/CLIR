@@ -4,7 +4,7 @@
 \alias{render_service}
 \title{Renders Service Report File}
 \usage{
-render_service(name, ..., args = NULL, work_dir = ".", save = FALSE,
+render_service(name, ..., args = NULL, work_dir = ".",
   envir = parent.frame(), package = topenv(parent.frame()))
 }
 \arguments{
@@ -19,8 +19,6 @@ and passed down to \code{\link[rmarkdown]{render}}.}
 If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.}
 
 \item{work_dir}{path to working directory}
-
-\item{save}{logical or character string that specify if or where the result list should be saved.}
 
 \item{envir}{environment where the report is rendered. See \code{\link[rmarkdown]{render}}.}
 

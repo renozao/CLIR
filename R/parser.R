@@ -290,6 +290,10 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...){
     # qsub 
     parser$add_argument("--cli-qsub", help="extra qsub arguments"
                         , metavar='QSUB OPTIONS')
+    # save result
+    parser$add_argument("--cli-save", help="flag to save result into a file"
+            , nargs = "?", const = 'result.rds'
+            , metavar='FILE')
     
     parser
 }

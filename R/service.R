@@ -67,13 +67,12 @@ copy_service_files <- function(name, to, ...){
 #' @param args report parameters passed as a character vector, typically from command line arguments.
 #' If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.
 #' @param work_dir path to working directory
-#' @param save logical or character string that specify if or where the result list should be saved.
 #' @param envir environment where the report is rendered. See \code{\link[rmarkdown]{render}}.
 #' @inheritParams service_files
 #'  
 #' @seealso \code{\link[rmarkdown]{render}}
 #' @export
-render_service <- function(name, ..., args = NULL, work_dir = '.', save = FALSE, envir = parent.frame(), package = topenv(parent.frame())){
+render_service <- function(name, ..., args = NULL, work_dir = '.', envir = parent.frame(), package = topenv(parent.frame())){
   
   if( !requireNamespace('rmarkdown') )
     stop('Missing dependency: package "rmarkdown" is needed to render service documents.')
@@ -108,13 +107,6 @@ render_service <- function(name, ..., args = NULL, work_dir = '.', save = FALSE,
     if( is.list(output) ) output <- names(output)
     res <- sapply(output, function(n) get0(n, envir = envir, inherits = FALSE), simplify = FALSE)
     result <- c(result, res)
-  }
-  
-  # save result if requested
-  if( !isFALSE(save) ){
-    resfile <- 'results.rds'
-    if( isString(save) ) resfile <- save
-    saveRDS(res, file = resfile)
   }
   
   # return result invisibly
