@@ -8,7 +8,7 @@
 CLIArgumentParser(prog = CLIfile(), description = "", ..., epilog = "",
   show.defaults = TRUE)
 
-parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE)
+parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...)
 }
 \arguments{
 \item{prog}{program name}

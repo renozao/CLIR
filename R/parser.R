@@ -194,7 +194,7 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #' 
 #' @export
 #' @rdname CLIArgumentParser
-parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
+parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...){
     
     if( is.character(ARGS) ){
         if( length(ARGS) == 1L  ) ARGS <- strsplit(ARGS, ' ')[[1]] # used in dev/debugging
@@ -276,7 +276,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE){
         #
 
         # call command handler
-        cmd_fun(ARGS = args)
+        cmd_fun(ARGS = args, ...)
     }
 }
 

@@ -300,9 +300,9 @@ makeCLIfunction <- function(entry, path){
     #
     
     # returned wrapper function
-    function(ARGS){
+    function(ARGS, ...){
         # call modified CLI function with arguments
-        invisible(do.call(entry, ARGS))
+        invisible(do.call(entry, c(ARGS, list(...))))
     }
 }
 
