@@ -4,7 +4,7 @@
 # Created: Nov 20, 2013
 ###############################################################################
 
-#' @import methods utils
+#' @import methods utils backports
 #' @importFrom stats setNames
 NULL
 
