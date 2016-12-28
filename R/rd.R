@@ -126,6 +126,9 @@ rd_topic_args2txt <- function(x, rd, ..., format = TRUE, collapse = NULL){
         paste0(res, collapse = "\n")
     }else{
         args <- tools:::.Rd_get_argument_table(a)
+        # remove ...
+        args <- args[args[, 1] != '...', , drop = FALSE]
+        
         if( !format ) return( setNames(args[, 2L], args[, 1L]) )
         mapply(function(p, d){        
             tmp <- textConnection(d)
