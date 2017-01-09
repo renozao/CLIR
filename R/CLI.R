@@ -119,7 +119,7 @@ CLI <- function(commands = NULL, default=NULL, ARGS = commandArgs(TRUE), ..., pa
 #    }
     
     # build main CLI
-    pkgCLI <- makeCLI(commands = commands, default = default, package = package)
+    pkgCLI <- makeCLI(commands = commands, default = default, package = package, ...)
     qlibrary('CLIR', character.only = TRUE)
     # run CLI
     .CLIargs(ARGS)
@@ -167,9 +167,9 @@ makeCLI <- function(commands = NULL, default = NULL, package = NULL){
     
     # create entry CLI entries
     .CLI_entries <- sapply(seq_along(commands), function(i, ...){
-                e <- commands[i]
+                e <- commands[[i]]
                 # use specified entry names if any
-                if( identical(name <- names(e), '') ) name <- NULL
+                if( identical(name <- names(commands)[i], '') ) name <- NULL
                 makeCLIentry(e, name = name, ...)
             }, main = main, path = path, simplify = FALSE)
     
