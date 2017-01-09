@@ -66,24 +66,41 @@ copy_service_files <- function(name, to, ...){
 #' and passed down to \code{\link[rmarkdown]{render}}.
 #' @param args report parameters passed as a character vector, typically from command line arguments.
 #' If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.
-#' @param work_dir path to working directory
+#' @param outdir path to working directory
 #' @param envir environment where the report is rendered. See \code{\link[rmarkdown]{render}}.
 #' @inheritParams service_files
 #'  
 #' @seealso \code{\link[rmarkdown]{render}}
 #' @export
-render_service <- function(name, ..., args = NULL, work_dir = '.', envir = parent.frame(), package = topenv(parent.frame())){
+render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.frame(), package = topenv(parent.frame()), .extra.files = NULL){
   
   if( !requireNamespace('rmarkdown') )
-    stop('Missing dependency: package "rmarkdown" is needed to render service documents.')
-  
+    stop('Missing dependency: package "rmarkdown" is needed to render service ', name, ".")
+  if( !pkgmaker::qrequire(package, character.only = TRUE) )
+    stop(sprintf('Missing dependency: service package "%s" is needed to render service %s.', package, name))
+    
   # setup working directory with service files
+  work_dir <- outdir
   dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
   work_dir <- normalizePath(work_dir)
-  
   # copy service files
   sfiles <- copy_service_files(name, to = work_dir, package = package)
+  if( !is.null(.extra.files) ) file.copy(.extra.files, work_dir, recursive = TRUE)
   service_file <- sfiles[1L]
+  #
+  
+  # process parameters
+  PARAMS <- args %||% list(...)
+  if( is.list(PARAMS) && !is.null(param_specs <- yaml_header(file.path(work_dir, service_file), 'params')) ){
+    lapply(names(param_specs), function(n){
+          p <- PARAMS[[n]]
+          # normalize path to file arguments
+          if( !is.null(p) && param_specs[[n]]$input %in% 'file' ) 
+            PARAMS[[n]] <<- normalizePath(p)
+        })
+  }
+  #
+  
   # change to output directory
   owd <- setwd(work_dir)
   # setup cleanup on exit
@@ -93,12 +110,13 @@ render_service <- function(name, ..., args = NULL, work_dir = '.', envir = paren
     # switch back to old working directory
     setwd(owd) 
   })
-  
+  #
+    
   # render service script
-  PARAMS <- list(...)
   report_file <- rmarkdown::render(service_file, params = PARAMS, envir = envir)
   
-  # return result
+  # return result 
+  # TODO: params should be those resolved in the script but object 'params' seems to be deleted form the environment
   result <- list(report_file = report_file, params = PARAMS)
   
   # retrieve output data
@@ -108,6 +126,9 @@ render_service <- function(name, ..., args = NULL, work_dir = '.', envir = paren
     res <- sapply(output, function(n) get0(n, envir = envir, inherits = FALSE), simplify = FALSE)
     result <- c(result, res)
   }
+  
+  # save result as an .rds file
+  saveRDS(res, 'results.rds')
   
   # return result invisibly
   invisible(result)
