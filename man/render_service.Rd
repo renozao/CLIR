@@ -4,8 +4,9 @@
 \alias{render_service}
 \title{Renders Service Report File}
 \usage{
-render_service(name, ..., args = NULL, work_dir = ".",
-  envir = parent.frame(), package = topenv(parent.frame()))
+render_service(name, ..., args = NULL, outdir = ".",
+  envir = parent.frame(), package = topenv(parent.frame()),
+  .extra.files = NULL)
 }
 \arguments{
 \item{name}{name of the service.
@@ -18,7 +19,7 @@ and passed down to \code{\link[rmarkdown]{render}}.}
 \item{args}{report parameters passed as a character vector, typically from command line arguments.
 If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.}
 
-\item{work_dir}{path to working directory}
+\item{outdir}{path to working directory}
 
 \item{envir}{environment where the report is rendered. See \code{\link[rmarkdown]{render}}.}
 

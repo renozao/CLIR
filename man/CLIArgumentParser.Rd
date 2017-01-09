@@ -8,7 +8,8 @@
 CLIArgumentParser(prog = CLIfile(), description = "", ..., epilog = "",
   show.defaults = TRUE)
 
-parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...)
+parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE, cli.args = NULL,
+  ...)
 }
 \arguments{
 \item{prog}{program name}
@@ -27,6 +28,9 @@ be displayed.}
 \item{ARGS}{command line argument to parse, as a named list or a character string.}
 
 \item{debug}{logical that indicate if debugging information should be printed.}
+
+\item{cli.args}{extra CLI arguments to be added to the interface.
+Currently the following are supported: 'qsub', 'save', 'config'.}
 }
 \description{
 Extends the capabilities of package \pkg{argparse}, e.g., in defining sub commands.
