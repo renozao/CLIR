@@ -16,10 +16,10 @@
 #' The base directory itself is always returned as an attribute ('path').
 #' @param package name of the package where to look for the givne service.
 #' 
-#' @importFrom pkgmaker packagePath
 #' @export 
 service_files <- function(name, all = FALSE, full.names = FALSE, package = topenv(parent.frame())){
   
+  package <- pkgmaker:::packageName(package)
   serv_path <- packagePath('services', package = package)
   serv_base <- file.path(serv_path, name)
   # extend to actual file if one found the given service directory
@@ -34,7 +34,7 @@ service_files <- function(name, all = FALSE, full.names = FALSE, package = topen
   }else{
     if( file_ext(serv_base) == '' && file.exists(serv_file_r <- paste0(serv_base, ".r")) ) serv_files <- serv_file_r
     else{
-      if( !file.exists(serv_base) ) stop("Could not find service '", name, "' under ", serv_base)
+      if( !file.exists(serv_base) ) stop("Could not find report '", name, "' in package ", package)
       serv_files <- serv_base
     }
     serv_base <- dirname(serv_files)
@@ -69,6 +69,7 @@ copy_service_files <- function(name, to, ...){
 #' @param outdir path to working directory
 #' @param envir environment where the report is rendered. See \code{\link[rmarkdown]{render}}.
 #' @inheritParams service_files
+#' @param .extra.files vector of paths to extra files to copy to the output directory.
 #'  
 #' @seealso \code{\link[rmarkdown]{render}}
 #' @export
@@ -76,6 +77,7 @@ render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.
   
   if( !requireNamespace('rmarkdown') )
     stop('Missing dependency: package "rmarkdown" is needed to render service ', name, ".")
+  package <- pkgmaker:::packageName(package)
   if( !pkgmaker::qrequire(package, character.only = TRUE) )
     stop(sprintf('Missing dependency: service package "%s" is needed to render service %s.', package, name))
     

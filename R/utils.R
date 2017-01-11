@@ -4,7 +4,7 @@
 # Created: Nov 20, 2013
 ###############################################################################
 
-#' @import methods utils backports
+#' @import methods utils backports pkgmaker
 #' @importFrom stats setNames
 NULL
 
@@ -111,7 +111,7 @@ cli_metaheader <- function(...){
 cli_startup <- function(verbose = TRUE){
     
     script <- cli_self()
-    suppressMessages(library(pkgmaker))
+#    suppressMessages(library(pkgmaker))
     if( verbose ){
         message("* Script: ", script)
         message("* Running in: ", getwd())

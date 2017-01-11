@@ -56,26 +56,26 @@ cli_message <- function(..., item = '', appendLF = TRUE){
     cli_smessage(..., item = item, appendLF = appendLF)
 }
 
-tryCatchWarning <- local({
-    W <- list()
-    w.handler <- function(w){ # warning handler
-                W <<- c(W, list(w))
-                invokeRestart("muffleWarning")
-    }
-    function(expr, ..., format. = FALSE)
-    {
-                if( missing(expr) ){
-        if( isFALSE(format.) ) return(W)
-        else{
-            if( !length(W) ) return(NULL)
-            w <- str_trim(sapply(W, as.character))
-            if( is.na(format.) ) return(w)
-            res <- paste0('## Warnings:\n', paste0("* ", w, collapse = "\n"))
-                return(res)
-            }
-        }
-        W <<- list()
-        withCallingHandlers(tryCatch(expr, ...)
-                , warning = w.handler)
-            }
-})
+#tryCatchWarning <- local({
+#    W <- list()
+#    w.handler <- function(w){ # warning handler
+#                W <<- c(W, list(w))
+#                invokeRestart("muffleWarning")
+#    }
+#    function(expr, ..., format. = FALSE)
+#    {
+#                if( missing(expr) ){
+#        if( isFALSE(format.) ) return(W)
+#        else{
+#            if( !length(W) ) return(NULL)
+#            w <- str_trim(sapply(W, as.character))
+#            if( is.na(format.) ) return(w)
+#            res <- paste0('## Warnings:\n', paste0("* ", w, collapse = "\n"))
+#                return(res)
+#            }
+#        }
+#        W <<- list()
+#        withCallingHandlers(tryCatch(expr, ...)
+#                , warning = w.handler)
+#            }
+#})

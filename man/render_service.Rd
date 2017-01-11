@@ -24,6 +24,8 @@ If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignor
 \item{envir}{environment where the report is rendered. See \code{\link[rmarkdown]{render}}.}
 
 \item{package}{name of the package where to look for the givne service.}
+
+\item{.extra.files}{vector of paths to extra files to copy to the output directory.}
 }
 \description{
 Generates a service report.
