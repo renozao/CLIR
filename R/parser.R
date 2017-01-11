@@ -191,10 +191,12 @@ CLIArgumentParser <- function(prog = CLIfile(), description = '', ..., epilog = 
 #' @param parser parser object as returned by \code{CLIArgumentParser}.
 #' @param ARGS command line argument to parse, as a named list or a character string.
 #' @param debug logical that indicate if debugging information should be printed.
+#' @param cli.args extra CLI arguments to be added to the interface.
+#' Currently the following are supported: 'qsub', 'save', 'config'.
 #' 
 #' @export
 #' @rdname CLIArgumentParser
-parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...){
+parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, cli.args = NULL, ...){
     
     if( is.character(ARGS) ){
         if( length(ARGS) == 1L  ) ARGS <- strsplit(ARGS, ' ')[[1]] # used in dev/debugging
@@ -242,7 +244,7 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...){
     cmd_parser <- parser$command[[command]]$parser
     
     # add CLI arguments
-    cmd_parser <- .setCLIArguments(cmd_parser)
+    cmd_parser <- .setCLIArguments(cmd_parser, args = cli.args)
     
     #    print(cmd_parser$python_code)
     ARGS <- ARGS[-1L]
@@ -280,20 +282,23 @@ parseCMD <- function(parser, ARGS = commandArgs(TRUE), debug = FALSE, ...){
     }
 }
 
-.setCLIArguments <- function(parser){
+.setCLIArguments <- function(parser, args = NULL){
     
     # config file
-    parser$add_argument("--cli-config" 
-            , help="YAML configuration file that contains specifications of command line arguments."
-            , nargs = '?', const = 'config.xml'
-            , metavar = 'FILE')
+    if( 'config' %in% args )
+      parser$add_argument("--cli-config" 
+              , help="YAML configuration file that contains specifications of command line arguments."
+              , nargs = '?', const = 'config.xml'
+              , metavar = 'FILE')
     # qsub 
-    parser$add_argument("--cli-qsub", help="extra qsub arguments"
-                        , metavar='QSUB OPTIONS')
+    if( 'qsub' %in% args )
+      parser$add_argument("--cli-qsub", help="extra qsub arguments"
+                          , metavar='QSUB OPTIONS')
     # save result
-    parser$add_argument("--cli-save", help="flag to save result into a file"
-            , nargs = "?", const = 'result.rds'
-            , metavar='FILE')
+    if( 'save' %in% args )
+      parser$add_argument("--cli-save", help="flag to save result into a file"
+              , nargs = "?", const = 'result.rds'
+              , metavar='FILE')
     
     parser
 }
