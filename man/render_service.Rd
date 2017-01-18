@@ -4,7 +4,7 @@
 \alias{render_service}
 \title{Renders Service Report File}
 \usage{
-render_service(name, ..., args = NULL, outdir = ".",
+render_service(name, ..., params = NULL, output_dir = ".", quiet = NULL,
   envir = parent.frame(), package = topenv(parent.frame()),
   .extra.files = NULL)
 }
@@ -16,10 +16,15 @@ that contains it.}
 \item{...}{report parameters checked against their specifications defined in the report YAML header file
 and passed down to \code{\link[rmarkdown]{render}}.}
 
-\item{args}{report parameters passed as a character vector, typically from command line arguments.
-If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.}
+\item{params}{report parameters passed as a named list, typically from command line arguments.
+If \var{params} is not \code{NULL}, then any argument passed in \var{...} is ignored and will most likely
+result in an error from \link[rmarkdown:render]{rmarkdown::render}.}
 
-\item{outdir}{path to working directory}
+\item{output_dir}{Output directory, where to generate the report.
+The default is to generate the report in the current working directory.}
+
+\item{quiet}{logical that indicates if the report should be generated quietly.
+If \code{NULL} then only an overview of the script parameters is shown.}
 
 \item{envir}{environment where the report is rendered. See \code{\link[rmarkdown]{render}}.}
 

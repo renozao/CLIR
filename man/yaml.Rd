@@ -23,10 +23,10 @@ read.yaml(input, ...)
 
 \item{...}{ arguments to pass to yaml.load }
 
-\item{.metaheader}{logical that indicates if a metadata header tha includes date time, SHA and 
+\item{.metaheader}{logical that indicates if a metadata header tha includes date time, SHA and
 \pkg{CLIR} version number should be added as leading comments.
 
-Can also be a character vector, which is then written "as is", one element per line (each line is 
+Can also be a character vector, which is then written "as is", one element per line (each line is
 prefixed with a "#").}
 
 \item{input}{ a filename or connection }

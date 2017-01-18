@@ -328,7 +328,7 @@ list2env(.CONFIG <- CLIR::read.yaml(.CONFIGFILE), envir = e)
     invisible(out)
 }
 
-
+#' @importFrom knitr knit
 yaml_header <- function(file, section = NULL, simplify = TRUE){
   
   .collapse <- function(...) paste0(..., collapse = "\n")

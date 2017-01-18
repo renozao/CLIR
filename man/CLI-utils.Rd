@@ -17,7 +17,7 @@ If \code{FALSE} (default), only the filename is returned.}
 \describe{
 \item{'parsed'}{ a list of pairs argument/value, where the values were
 parsed and processed according to each argument specification.}
-\item{'raw'}{ same as \code{'parsed'}, but with values as passed 
+\item{'raw'}{ same as \code{'parsed'}, but with values as passed
 to the command line (not working)}
 \item{'cmd'}{ raw command line (not working)}
 }}

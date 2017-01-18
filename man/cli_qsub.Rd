@@ -10,10 +10,10 @@ cli_qsub(cmd, job_name, ..., skip = "qsub", args = CLIargs(skip = skip),
 \arguments{
 \item{cmd}{command line command}
 
-\item{job_name}{Job name, if provided as \code{NULL} or the empty string \code{''}, 
+\item{job_name}{Job name, if provided as \code{NULL} or the empty string \code{''},
 then a unique job name is built based on the command and the current date.}
 
-\item{...}{single named argument that specifies the command line argument (and its values) 
+\item{...}{single named argument that specifies the command line argument (and its values)
 that should be vectorized into a job array.}
 
 \item{skip}{names of the arguments in \code{args} to skip, i.e. to remove

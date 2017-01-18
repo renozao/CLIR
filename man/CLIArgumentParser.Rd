@@ -20,7 +20,7 @@ parseCMD(parser, ARGS = commandArgs(TRUE), debug = FALSE, cli.args = NULL,
 
 \item{epilog}{epilog messages to display at the end of the man pages}
 
-\item{show.defaults}{logical that indicates if default arugment values should 
+\item{show.defaults}{logical that indicates if default arugment values should
 be displayed.}
 
 \item{parser}{parser object as returned by \code{CLIArgumentParser}.}
@@ -35,6 +35,6 @@ Currently the following are supported: 'qsub', 'save', 'config'.}
 \description{
 Extends the capabilities of package \pkg{argparse}, e.g., in defining sub commands.
 
-\code{parseCMD} parse command line arguments for sub-commands, 
+\code{parseCMD} parse command line arguments for sub-commands,
 and dispatch to the associated function.
 }

@@ -18,10 +18,11 @@ Imports:
     proto,
     digest,
     roxygen2,
-    pkgmaker
+    pkgmaker,
+    rmarkdown,
+    knitr
 Suggests:
-    devtools,
-    rmarkdown
+    devtools
 Collate:
     'utils.R'
     'CLI.R'
@@ -31,3 +32,4 @@ Collate:
     'rd.R'
     'service.R'
 RoxygenNote: 5.0.1.9000
+Roxygen: list(markdown = TRUE)

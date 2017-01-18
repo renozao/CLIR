@@ -12,10 +12,10 @@ service_files(name, all = FALSE, full.names = FALSE,
 It can be the name of the script that implements the service or the name of the directory
 that contains it.}
 
-\item{all}{logical that indicates if all the files associated with the service should be 
+\item{all}{logical that indicates if all the files associated with the service should be
 returned.}
 
-\item{full.names}{logical that indicates if the full path to the services file(s) should 
+\item{full.names}{logical that indicates if the full path to the services file(s) should
 be returned or only the path relative to the service base directory.
 The base directory itself is always returned as an attribute ('path').}
 

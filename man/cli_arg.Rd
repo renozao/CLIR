@@ -20,14 +20,14 @@ cli_arg(name, default = NULL, alt = NA, required = FALSE,
 \item{trailing.only}{logical that indicates if the parameter should be looked
 in the trailing arguments only, or in the arguments meant for \emph{R} or \emph{Rscript}.}
 
-\item{as.is}{logical that indicates if the name should be looked up as is in the 
+\item{as.is}{logical that indicates if the name should be looked up as is in the
 command line argument or with a double/single dash prefix.}
 
 \item{args}{vector of command line argument to parse}
 
 \item{with.details}{logical that indicates if details about the argument match should be returned.}
 
-\item{error}{logical that indicates if an error should be raised when the command line arguments 
+\item{error}{logical that indicates if an error should be raised when the command line arguments
 do not meet the constrains, e.g., required.}
 }
 \description{

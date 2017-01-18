@@ -32,6 +32,6 @@ cli_message(..., item = "", appendLF = TRUE)
 Note that messages are still shown in \emph{stderr}.}
 }
 \description{
-The function \code{cli_*} wrap calls to the corresponding 
+The function \code{cli_*} wrap calls to the corresponding
 base functions, to allow automatic formating and redirection.
 }
