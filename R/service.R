@@ -64,16 +64,20 @@ copy_service_files <- function(name, to, ...){
 #' 
 #' @param ... report parameters checked against their specifications defined in the report YAML header file
 #' and passed down to \code{\link[rmarkdown]{render}}.
-#' @param args report parameters passed as a character vector, typically from command line arguments.
-#' If \var{args} is not \code{NULL}, then any argument passed in \var{...} is ignored.
-#' @param outdir path to working directory
+#' @param params report parameters passed as a named list, typically from command line arguments.
+#' If \var{params} is not \code{NULL}, then any argument passed in \var{...} is ignored and will most likely
+#' result in an error from [rmarkdown::render].
+#' @param output_dir Output directory, where to generate the report.
+#' The default is to generate the report in the current working directory.
+#' @param quiet logical that indicates if the report should be generated quietly.
+#' If `NULL` then only an overview of the script parameters is shown.
 #' @param envir environment where the report is rendered. See \code{\link[rmarkdown]{render}}.
 #' @inheritParams service_files
 #' @param .extra.files vector of paths to extra files to copy to the output directory.
 #'  
 #' @seealso \code{\link[rmarkdown]{render}}
 #' @export
-render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.frame(), package = topenv(parent.frame()), .extra.files = NULL){
+render_service <- function(name, ..., params = NULL, output_dir = '.', quiet = NULL, envir = parent.frame(), package = topenv(parent.frame()), .extra.files = NULL){
   
   if( !requireNamespace('rmarkdown') )
     stop('Missing dependency: package "rmarkdown" is needed to render service ', name, ".")
@@ -82,7 +86,7 @@ render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.
     stop(sprintf('Missing dependency: service package "%s" is needed to render service %s.', package, name))
     
   # setup working directory with service files
-  work_dir <- outdir
+  work_dir <- output_dir
   dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
   work_dir <- normalizePath(work_dir)
   # copy service files
@@ -92,14 +96,40 @@ render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.
   #
   
   # process parameters
-  PARAMS <- args %||% list(...)
-  if( is.list(PARAMS) && !is.null(param_specs <- yaml_header(file.path(work_dir, service_file), 'params')) ){
-    lapply(names(param_specs), function(n){
+  render_params <- list(...)
+  PARAMS <- params
+  script_params <- yaml_header(file.path(work_dir, service_file), 'params')
+  if( is.null(script_params) ){ # no parameter should be passed to the script
+    if( length(PARAMS) )
+      warning(sprintf('Script does not allow any parameter: discarding script parameters [%s]', str_out(names(PARAMS), total = TRUE)))
+    PARAMS <- NULL
+    
+  }else {
+    # split report and render parameters
+    if( !length(PARAMS) ){
+      PARAMS <- render_params[intersect(names(render_params), names(script_params))]
+      render_params <- render_params[setdiff(names(render_params), names(script_params))]
+    }
+    
+    lapply(names(script_params), function(n){
           p <- PARAMS[[n]]
+          input_type <- script_params[[n]]$input %||% ''
           # normalize path to file arguments
-          if( !is.null(p) && param_specs[[n]]$input %in% 'file' ) 
-            PARAMS[[n]] <<- normalizePath(p)
+          if( !is.null(p) && input_type %in% 'file' && isString(p) ) PARAMS[[n]] <<- normalizePath(p)
         })
+  }
+  
+  
+  do.quiet <- quiet %||% TRUE
+  if( (is.null(quiet) || !do.quiet) && length(PARAMS) ){
+    message(sprintf('# Generating report: %s\n* Using %i parameters:', name, length(PARAMS)))
+    pstr <- function(x){
+      if( isS4(x) ) class(x)
+      else x
+    }
+    param_str <- capture.output(str(lapply(PARAMS, pstr)))[-1L]
+    message(paste0(param_str, collapse = "\n"))
+    message("========")
   }
   #
   
@@ -115,7 +145,7 @@ render_service <- function(name, ..., args = NULL, outdir = '.', envir = parent.
   #
     
   # render service script
-  report_file <- rmarkdown::render(service_file, params = PARAMS, envir = envir)
+  report_file <- do.call(rmarkdown::render, c(list(service_file, params = PARAMS, envir = envir, quiet = do.quiet), render_params))
   
   # return result 
   # TODO: params should be those resolved in the script but object 'params' seems to be deleted form the environment
