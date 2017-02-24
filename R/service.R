@@ -37,11 +37,17 @@ script_files <- function(name, all = FALSE, full.names = FALSE, package = topenv
   }else{
     if( file_ext(serv_base) == '' && file.exists(serv_file_r <- paste0(serv_base, ".r")) ) serv_files <- serv_file_r
     else{
-      if( !file.exists(serv_base) ) stop("Could not find script '", name, "' in package ", package)
+      if( !file.exists(serv_base) ) stop(sprintf("Could not find script '%s' in package %s [basedir: %s]", name, package, basedir))
       serv_files <- serv_base
     }
     serv_base <- dirname(serv_files)
   }
+  
+  # return all .css files as well if requested
+  if( all ){
+    serv_files <- c(serv_files, list.files(serv_base, pattern = "\\.css$"))
+  }
+  serv_files <- unique(serv_files)
   
   # remove base part if not requested otherwise
   if( !full.names ) serv_files <- sub(paste0(serv_base, '/'), "", serv_files, fixed = TRUE)
@@ -141,7 +147,7 @@ render_script <- function(name, ..., params = NULL, output_dir = '.', quiet = NU
   # setup cleanup on exit
   on.exit({
     # delete service files
-    unlink(file.path(work_dir, sfiles), recursive = TRUE)
+    unlink(file.path(work_dir, service_file), recursive = TRUE)
     # switch back to old working directory
     setwd(owd) 
   })
