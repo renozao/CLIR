@@ -15,12 +15,15 @@
 #' be returned or only the path relative to the service base directory.
 #' The base directory itself is always returned as an attribute ('path').
 #' @param package name of the package where to look for the givne service.
+#' @param basedir path to the directory in the package where to look for the script.
+#' The path must be relative to the root package directory.
+#' If `NULL` then the default value "scripts" is used.
 #' 
 #' @export 
-service_files <- function(name, all = FALSE, full.names = FALSE, package = topenv(parent.frame())){
+script_files <- function(name, all = FALSE, full.names = FALSE, package = topenv(parent.frame()), basedir = 'scripts'){
   
   package <- pkgmaker:::packageName(package)
-  serv_path <- packagePath('services', package = package)
+  serv_path <- packagePath(basedir %||% 'scripts', package = package)
   serv_base <- file.path(serv_path, name)
   # extend to actual file if one found the given service directory
   if( dir.exists(serv_base) ){
@@ -34,7 +37,7 @@ service_files <- function(name, all = FALSE, full.names = FALSE, package = topen
   }else{
     if( file_ext(serv_base) == '' && file.exists(serv_file_r <- paste0(serv_base, ".r")) ) serv_files <- serv_file_r
     else{
-      if( !file.exists(serv_base) ) stop("Could not find report '", name, "' in package ", package)
+      if( !file.exists(serv_base) ) stop("Could not find script '", name, "' in package ", package)
       serv_files <- serv_base
     }
     serv_base <- dirname(serv_files)
@@ -49,18 +52,18 @@ service_files <- function(name, all = FALSE, full.names = FALSE, package = topen
 }
 
 # copies all the files needed for running a service to a target directory
-copy_service_files <- function(name, to, ...){
+copy_script_files <- function(name, to, ...){
   
-  sfiles <- service_files(name, ..., full.names = FALSE, all = TRUE)
+  sfiles <- script_files(name, ..., full.names = FALSE, all = TRUE)
   base <- attr(sfiles, 'path')
   file.copy(file.path(base, sfiles), to, recursive = TRUE, overwrite = TRUE)
   sfiles
   
 }
 
-#' Renders Service Report File
+#' Renders Rmarkdown Script Files from Packages
 #' 
-#' Generates a service report.
+#' Generates a report.
 #' 
 #' @param ... report parameters checked against their specifications defined in the report YAML header file
 #' and passed down to \code{\link[rmarkdown]{render}}.
@@ -72,12 +75,12 @@ copy_service_files <- function(name, to, ...){
 #' @param quiet logical that indicates if the report should be generated quietly.
 #' If `NULL` then only an overview of the script parameters is shown.
 #' @param envir environment where the report is rendered. See \code{\link[rmarkdown]{render}}.
-#' @inheritParams service_files
+#' @inheritParams script_files
 #' @param .extra.files vector of paths to extra files to copy to the output directory.
 #'  
 #' @seealso \code{\link[rmarkdown]{render}}
 #' @export
-render_service <- function(name, ..., params = NULL, output_dir = '.', quiet = NULL, envir = parent.frame(), package = topenv(parent.frame()), .extra.files = NULL){
+render_script <- function(name, ..., params = NULL, output_dir = '.', quiet = NULL, envir = parent.frame(), package = topenv(parent.frame()), basedir = NULL, .extra.files = NULL){
   
   if( !requireNamespace('rmarkdown') )
     stop('Missing dependency: package "rmarkdown" is needed to render service ', name, ".")
@@ -90,7 +93,7 @@ render_service <- function(name, ..., params = NULL, output_dir = '.', quiet = N
   dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
   work_dir <- normalizePath(work_dir)
   # copy service files
-  sfiles <- copy_service_files(name, to = work_dir, package = package)
+  sfiles <- copy_script_files(name, to = work_dir, package = package, basedir = basedir)
   if( !is.null(.extra.files) ) file.copy(.extra.files, work_dir, recursive = TRUE)
   service_file <- sfiles[1L]
   #
