@@ -141,6 +141,15 @@ render_script <- function(name, ..., params = NULL, output_dir = '.', quiet = NU
     message("========")
   }
   #
+
+  # overwrite parameter objects in running environment
+  if( length(PARAMS) ){
+    lapply(names(PARAMS), function(n){
+          if( exists(n, envir = envir) ) warning(sprintf("Parameter %s overwrites object in running environment", n))
+          assign(n, PARAMS[[n]], envir)
+        })
+  }
+  #
   
   # change to output directory
   owd <- setwd(work_dir)
